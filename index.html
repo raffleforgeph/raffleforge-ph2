@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>RaffleForge PH — Daily Grand Draw</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060608;--bg2:#0C0C10;--bg3:#131318;--bg4:#1A1A22;--bg5:#22222E;
+  --gold:#F5C518;--gold2:#C09800;--glow:rgba(245,197,24,0.35);
+  --green:#00E87B;--green2:#009E54;
+  --red:#FF4444;--blue:#4DABFF;--purple:#B47AFF;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#F0F0F0;--muted:#777;--muted2:#444;
+  --font-d:'Bebas Neue',cursive;--font-b:'Outfit',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:100;background:rgba(6,6,8,0.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:13px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--font-d);font-size:22px;letter-spacing:.06em;color:var(--gold);display:flex;align-items:center;gap:6px}
+.logo span{color:var(--text)}
+.live-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--green);letter-spacing:.1em;text-transform:uppercase}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:lp 1.5s ease-in-out infinite}
+@keyframes lp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+
+/* HERO */
+.hero{background:var(--bg2);border-bottom:1px solid var(--border);padding:52px 20px 44px;text-align:center;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 50% 50%,rgba(245,197,24,0.04) 0%,transparent 70%);pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
+.draw-eyebrow{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.draw-title{font-family:var(--font-d);font-size:clamp(36px,6vw,56px);letter-spacing:.04em;color:var(--text);margin-bottom:28px}
+
+/* RING */
+.ring-wrap{position:relative;display:inline-block;margin-bottom:0}
+.ring-svg{width:300px;height:300px;display:block}
+.rt{fill:none;stroke:var(--bg4);stroke-width:13}
+.rf{fill:none;stroke:var(--gold);stroke-width:13;stroke-linecap:round;stroke-dasharray:729;stroke-dashoffset:729;transform-origin:center;transform:rotate(-90deg);transition:stroke-dashoffset .4s ease,stroke .4s,filter .4s;filter:drop-shadow(0 0 6px var(--gold))}
+.rf.full{stroke:var(--green);filter:drop-shadow(0 0 16px var(--green));animation:rfp 1.2s ease-in-out infinite}
+@keyframes rfp{0%,100%{filter:drop-shadow(0 0 14px var(--green))}50%{filter:drop-shadow(0 0 28px var(--green))}}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.rc-label{font-size:9px;text-transform:uppercase;letter-spacing:.22em;color:var(--muted)}
+.rc-amount{font-family:var(--font-d);font-size:clamp(56px,14vw,76px);letter-spacing:.03em;line-height:1;color:var(--gold);text-shadow:0 0 28px var(--glow)}
+.rc-pct{font-size:13px;font-weight:600;color:var(--muted)}
+.ring-status{display:inline-block;position:relative;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 16px;border-radius:100px;white-space:nowrap;transition:all .3s;margin-top:14px}
+.rs-open{background:rgba(245,197,24,.1);color:var(--gold);border:1px solid rgba(245,197,24,.3)}
+.rs-full{background:rgba(0,232,123,.1);color:var(--green);border:1px solid rgba(0,232,123,.3)}
+.rs-draw{background:rgba(255,68,68,.1);color:var(--red);border:1px solid rgba(255,68,68,.3)}
+
+.ring-stats{display:flex;justify-content:center;gap:36px;margin-top:8px}
+.rstat{text-align:center}
+.rstat-v{font-family:var(--font-d);font-size:24px;letter-spacing:.02em}
+.rstat-l{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+
+.pw-strip{display:inline-flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:100px;padding:8px 18px;margin-top:18px;font-size:13px;flex-wrap:wrap;justify-content:center}
+.pw-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.pw-name{font-weight:700;color:var(--gold)}
+.pw-dt{font-size:11px;color:var(--muted)}
+
+/* PAGE BODY */
+.body{max-width:680px;margin:0 auto;padding:0 18px 100px}
+
+/* CARDS */
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:26px;margin-top:20px}
+.card-title{font-family:var(--font-d);font-size:21px;letter-spacing:.04em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* MECHANICS */
+.mrow{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
+.mrow:last-child{border-bottom:none}
+.mico{font-size:18px;padding-top:1px;flex-shrink:0}
+.mtxt{color:#ccc}
+.mtxt strong{color:var(--text)}
+
+/* PURCHASE */
+.sec-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:700;margin-bottom:12px}
+.sel-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.qty-sel{flex:1;min-width:110px;background:var(--bg4);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:var(--font-b);font-size:15px;font-weight:600;padding:12px 36px 12px 14px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;transition:border-color .2s}
+.qty-sel:focus{border-color:var(--gold)}
+.price-tag{background:var(--bg4);border:1px solid var(--border);border-radius:12px;padding:11px 18px;text-align:center;min-width:90px}
+.pt-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:1px}
+.pt-val{font-family:var(--font-d);font-size:24px;letter-spacing:.02em;color:var(--gold)}
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
+.bulk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px;margin-bottom:18px}
+.bcard{background:var(--bg4);border:1.5px solid var(--border);border-radius:13px;padding:14px 12px;cursor:pointer;transition:all .18s;position:relative;user-select:none}
+.bcard:hover{border-color:var(--border2);background:var(--bg5);transform:translateY(-1px)}
+.bcard.sel{border-color:var(--gold);background:rgba(245,197,24,.06)}
+.bcard.sel::after{content:'✓';position:absolute;top:8px;right:10px;font-size:13px;color:var(--gold);font-weight:700}
+.bpop{position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--bg);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 10px;border-radius:100px;white-space:nowrap}
+.bqty{font-family:var(--font-d);font-size:30px;letter-spacing:.02em;line-height:1}
+.belbl{font-size:10px;color:var(--muted);margin-bottom:6px}
+.bprice{font-size:16px;font-weight:700;color:var(--gold)}
+.bsave{font-size:11px;color:var(--green);margin-top:2px}
+.pbtn{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg);font-family:var(--font-b);font-size:16px;font-weight:700;padding:16px 24px;border-radius:13px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .2s;letter-spacing:.02em}
+.pbtn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(245,197,24,.3)}
+.pbtn:disabled{background:var(--bg4);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none}
+.pbtn-note{text-align:center;font-size:11px;color:var(--muted2);margin-top:7px}
+.closed-box{display:none;background:rgba(255,68,68,.07);border:1px solid rgba(255,68,68,.25);border-radius:13px;padding:16px;text-align:center;margin-top:16px}
+.closed-box.show{display:block}
+.cb-title{font-family:var(--font-d);font-size:22px;letter-spacing:.04em;color:var(--red);margin-bottom:3px}
+.cb-sub{font-size:13px;color:var(--muted)}
+
+/* WINNERS TABLE */
+.winners-scroll{max-height:300px;overflow-y:auto;border-radius:12px}
+.winners-scroll::-webkit-scrollbar{width:4px}
+.winners-scroll::-webkit-scrollbar-track{background:transparent}
+.winners-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.winners-scroll::-webkit-scrollbar-thumb:hover{background:rgba(245,197,24,.3)}
+.wtbl{width:100%;border-collapse:collapse}
+.wtbl thead th{position:sticky;top:0;background:var(--bg3);z-index:2}
+.wtbl th{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600;padding:10px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.wtbl td{padding:12px 10px;font-size:13px;border-bottom:1px solid var(--border)}
+.wtbl tr:last-child td{border-bottom:none}
+.wtbl tr:hover td{background:rgba(255,255,255,.015)}
+.wname{font-weight:600}
+.wtkt{font-family:var(--font-d);font-size:19px;color:var(--gold);letter-spacing:.05em}
+.wprize{font-weight:700;color:var(--green)}
+.wdate{color:var(--muted);font-size:11px}
+
+/* TRUST */
+.trust{background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:18px 22px;margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.trust-txt{font-size:12px;color:var(--muted);flex:1;min-width:180px}
+.trust-txt strong{color:var(--muted2)}
+.trust-logos{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tlogo{background:var(--bg4);border:1px solid var(--border);border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700}
+.tl-pm{color:#3A83F0;border-color:rgba(58,131,240,.3)}
+.tl-gc{color:#0077FF;border-color:rgba(0,119,255,.3)}
+.tl-my{color:#00B140;border-color:rgba(0,177,64,.3)}
+.tl-vi{color:#1A1F71;border-color:rgba(26,31,113,.3);background:#eef0fa}
+.tl-mc{color:#EB001B;border-color:rgba(235,0,27,.3)}
+
+/* MODAL BASE */
+.overlay{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.93);backdrop-filter:blur(14px);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;opacity:0;pointer-events:none;transition:opacity .3s}
+.overlay.open{opacity:1;pointer-events:all}
+.mbox{background:var(--bg3);border:1px solid var(--border2);border-radius:22px;max-width:480px;width:100%;padding:38px 32px;text-align:center;transform:scale(.96);transition:transform .3s;position:relative;overflow:hidden;margin:auto}
+.overlay.open .mbox{transform:scale(1)}
+
+/* COUNTDOWN MODAL */
+.cd-glow{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(245,197,24,.07),transparent 70%);pointer-events:none}
+.cd-icon{font-size:52px;margin-bottom:10px}
+.cd-title{font-family:var(--font-d);font-size:34px;letter-spacing:.04em;margin-bottom:5px}
+.cd-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+.cd-time{font-family:var(--font-d);font-size:68px;letter-spacing:.04em;color:var(--gold);text-shadow:0 0 30px var(--glow);line-height:1;margin-bottom:6px}
+.cd-timelbl{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
+.cd-info{margin-top:18px;padding:11px;background:var(--bg4);border-radius:11px;font-size:13px;color:var(--muted)}
+.cd-info strong{color:var(--green)}
+
+/* ROULETTE MODAL */
+.rmbox{max-width:660px}
+.rl-glow{position:absolute;inset:0;background:radial-gradient(ellipse 90% 60% at 50% 100%,rgba(245,197,24,.08),transparent 60%);pointer-events:none}
+.rl-ey{font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:var(--muted);margin-bottom:5px}
+.rl-title{font-family:var(--font-d);font-size:38px;letter-spacing:.04em;margin-bottom:3px}
+.rl-prize{font-size:13px;color:var(--gold);font-weight:600;margin-bottom:22px}
+.ps-area{margin-bottom:20px}
+.ps-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
+.ps-timer{font-family:var(--font-d);font-size:54px;letter-spacing:.05em;line-height:1;transition:color .3s}
+.ps-timer.urg{color:var(--red);text-shadow:0 0 16px rgba(255,68,68,.5)}
+
+/* REELS */
+.reels-shell{background:var(--bg);border:1px solid var(--border2);border-radius:16px;padding:22px 16px;margin-bottom:20px;position:relative}
+.reels-shine{position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(to bottom,rgba(255,255,255,.018),transparent);border-radius:16px 16px 0 0;pointer-events:none}
+.reels-row{display:flex;align-items:center;justify-content:center;gap:7px}
+.reel-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}
+.reel-idx{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.reel-sep{font-family:var(--font-d);font-size:58px;color:var(--muted2);line-height:1;margin-bottom:18px;align-self:flex-end;margin-bottom:22px}
+.reel{width:72px;height:90px;border-radius:11px;border:2px solid var(--border2);background:linear-gradient(to bottom,#080810,#111120,#080810);overflow:hidden;position:relative;transition:border-color .4s,box-shadow .4s}
+.reel.locked{border-color:var(--gold);box-shadow:0 0 18px rgba(245,197,24,.35),inset 0 0 16px rgba(245,197,24,.05)}
+.reel-strip{display:flex;flex-direction:column;will-change:transform}
+.reel-digit{height:90px;width:72px;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:52px;letter-spacing:.02em;flex-shrink:0}
+.reel::before,.reel::after{content:'';position:absolute;left:0;right:0;height:28px;pointer-events:none;z-index:2}
+.reel::before{top:0;background:linear-gradient(to bottom,rgba(6,6,10,.92),transparent)}
+.reel::after{bottom:0;background:linear-gradient(to top,rgba(6,6,10,.92),transparent)}
+.reel-ctr{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:2px;background:linear-gradient(90deg,transparent,rgba(245,197,24,.18),transparent);pointer-events:none;z-index:3}
+
+/* WINNER REVEAL */
+.wr{display:none;animation:wrin .5s ease}
+.wr.show{display:block}
+@keyframes wrin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.wr-name{font-family:var(--font-d);font-size:32px;letter-spacing:.04em;color:var(--gold);margin-bottom:3px;text-shadow:0 0 18px var(--glow)}
+.wr-tkt{font-size:13px;color:var(--muted);margin-bottom:14px}
+.wr-tkt span{color:var(--text);font-weight:600}
+
+/* TICKET RANGE — success screen */
+.ps-tickets-area{margin-bottom:12px}
+.ps-tkt-range{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+.ps-tkt-big{font-family:var(--font-d);font-size:24px;letter-spacing:.04em;color:var(--gold);margin-bottom:4px;line-height:1.1}
+.ps-tkt-count{font-size:12px;color:var(--green);margin-bottom:2px}
+.ps-tkt-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:6px}
+.tkt-chip{background:var(--bg4);border:1px solid rgba(245,197,24,.3);border-radius:7px;padding:4px 10px;font-family:var(--font-d);font-size:17px;letter-spacing:.04em;color:var(--gold)}
+
+/* ORGANIZER PAYOUT TOGGLE */
+.payout-toggle-btn{width:100%;background:var(--bg4);border:1.5px dashed rgba(0,232,123,.25);border-radius:10px;color:var(--muted);font-family:var(--font-b);font-size:12px;font-weight:600;padding:11px 14px;cursor:pointer;margin-bottom:10px;transition:all .2s;letter-spacing:.02em;text-align:center}
+.payout-toggle-btn:hover{border-color:var(--green);color:var(--green);background:rgba(0,232,123,.05)}
+.payout-toggle-btn.revealed{border-color:rgba(255,68,68,.3);color:var(--red);background:rgba(255,68,68,.04)}
+.payout-toggle-btn.revealed:hover{border-color:var(--red);color:var(--red)}
+
+/* ORGANIZER PAYOUT ADMIN BOX */
+.payout-admin{background:rgba(0,232,123,.06);border:1px solid rgba(0,232,123,.25);border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:left;display:none}
+.payout-admin.open{display:block;animation:wrin .3s ease}
+.payout-admin-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.payout-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.payout-row:last-child{margin-bottom:0}
+.payout-key{color:var(--muted);font-size:12px}
+.payout-val{font-weight:600;color:var(--text)}
+.payout-num{font-family:var(--font-d);font-size:20px;letter-spacing:.04em;color:var(--green)}
+.payout-action-note{font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,232,123,.15);display:flex;align-items:center;gap:6px}
+
+.claim-btn{background:linear-gradient(135deg,var(--green),var(--green2));color:var(--bg);font-family:var(--font-b);font-size:14px;font-weight:700;padding:13px 28px;border-radius:11px;border:none;cursor:pointer;letter-spacing:.02em;transition:all .2s}
+.claim-btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,232,123,.3)}
+
+/* CONFETTI */
+#cfx{position:fixed;inset:0;z-index:9999;pointer-events:none}
+.cb{position:fixed;top:-20px;border-radius:2px;animation:cff linear forwards}
+@keyframes cff{0%{transform:translateY(0) rotate(0deg);opacity:1}80%{opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}
+
+/* DEMO FAB */
+.dfab{position:fixed;bottom:22px;right:22px;z-index:300;display:flex;flex-direction:column;gap:7px;align-items:flex-end}
+.dfab-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);text-align:right}
+.dbtn{background:var(--bg4);border:1px solid var(--border2);color:var(--text);font-family:var(--font-b);font-size:12px;font-weight:600;padding:9px 16px;border-radius:100px;cursor:pointer;white-space:nowrap;transition:all .18s;letter-spacing:.03em}
+.dbtn:hover{background:var(--bg5);border-color:rgba(245,197,24,.5);color:var(--gold)}
+.dbtn.act{background:rgba(245,197,24,.08);border-color:var(--gold);color:var(--gold)}
+
+/* TOAST */
+.toast-el{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:#1e1e26;border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:100px;padding:10px 20px;font-size:12px;font-weight:500;z-index:9998;animation:tai .25s ease;white-space:nowrap;max-width:92vw;text-align:center;transition:opacity .3s}
+@keyframes tai{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ══ ENTRY FORM MODAL ══ */
+.efbox{max-width:460px;text-align:left;padding:30px 28px}
+.ef-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.ef-head-icon{width:44px;height:44px;border-radius:12px;background:var(--gold-dim,rgba(245,197,24,.12));border:1px solid rgba(245,197,24,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ef-title{font-family:var(--font-d);font-size:26px;letter-spacing:.04em;line-height:1}
+.ef-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;padding:12px 14px;background:rgba(77,171,255,.06);border:1px solid rgba(77,171,255,.15);border-radius:10px}
+.ef-sub strong{color:var(--blue)}
+.ef-group{margin-bottom:14px}
+.ef-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.ef-req{color:var(--gold);font-size:12px}
+.ef-input{width:100%;background:var(--bg4);border:1.5px solid var(--border2);border-radius:11px;color:var(--text);font-family:var(--font-b);font-size:15px;padding:12px 14px;outline:none;transition:border-color .2s,box-shadow .2s}
+.ef-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,197,24,.08)}
+.ef-input.err{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,68,68,.08)}
+.ef-input::placeholder{color:var(--muted2)}
+.ef-phone-row{display:flex}
+.ef-prefix{background:var(--bg5);border:1.5px solid var(--border2);border-right:none;border-radius:11px 0 0 11px;padding:12px 12px;font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap;display:flex;align-items:center}
+.ef-phone-row .ef-input{border-radius:0 11px 11px 0;flex:1}
+.ef-toggle{display:flex;gap:8px;margin-bottom:14px}
+.ef-tog-btn{flex:1;padding:11px 8px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg4);color:var(--muted);font-family:var(--font-b);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
+.ef-tog-btn:hover{border-color:var(--border2);background:var(--bg5)}
+.ef-tog-btn.on{border-color:var(--gold);color:var(--gold);background:rgba(245,197,24,.06)}
+.ef-err{font-size:11px;color:var(--red);margin-top:5px;display:none;padding-left:2px}
+.ef-err.show{display:block}
+.ef-divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+.ef-warn{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;background:rgba(255,68,68,.05);border:1px solid rgba(255,68,68,.18);border-radius:11px;margin-bottom:16px}
+.ef-warn-ico{font-size:16px;flex-shrink:0;margin-top:1px}
+.ef-warn-txt{font-size:12px;color:var(--muted);line-height:1.5}
+.ef-warn-txt strong{color:var(--red)}
+.ef-checkbox-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:18px}
+.ef-cb{width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:3px}
+.ef-cb-txt{font-size:12px;color:var(--muted);line-height:1.6;cursor:pointer}
+.ef-cb-txt strong{color:var(--text)}
+.ef-order{background:var(--bg4);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.ef-order-row{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.ef-order-row+.ef-order-row{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.ef-order-lbl{color:var(--muted)}
+.ef-order-val{font-weight:600}
+.ef-order-total .ef-order-lbl{font-weight:700;color:var(--text)}
+.ef-order-total .ef-order-val{font-family:var(--font-d);font-size:22px;color:var(--gold);letter-spacing:.04em}
+.ef-submit{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg);font-family:var(--font-b);font-size:16px;font-weight:700;padding:15px 24px;border-radius:12px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;letter-spacing:.02em}
+.ef-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(245,197,24,.3)}
+.ef-submit:disabled{background:var(--bg4);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none}
+.ef-secure{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted2);margin-top:10px}
+.ef-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;width:100%;text-align:center;padding:8px;margin-top:4px;transition:color .2s}
+.ef-back:hover{color:var(--text)}
+
+/* ══ SUCCESS FLASH ══ */
+.pay-success{display:none;text-align:center;padding:20px 0}
+.pay-success.show{display:block;animation:wrin .4s ease}
+.ps-check{font-size:56px;margin-bottom:10px}
+.ps-title{font-family:var(--font-d);font-size:28px;letter-spacing:.04em;color:var(--green);margin-bottom:6px}
+.ps-tkt{font-size:14px;color:var(--muted);margin-bottom:6px}
+.ps-tkt span{font-weight:700;color:var(--text)}
+.ps-payout{font-size:13px;color:var(--muted);padding:10px 14px;background:var(--bg4);border-radius:10px;margin-top:10px}
+.ps-payout strong{color:var(--gold)}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ARCH SECTION */
+.arch-section{background:var(--bg2);border-top:1px solid var(--border);padding:56px 20px}
+.arch-body{max-width:900px;margin:0 auto}
+.arch-eyebrow{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.arch-title{font-family:var(--font-d);font-size:clamp(32px,5vw,48px);letter-spacing:.03em;color:var(--text);margin-bottom:8px}
+.arch-sub{font-size:14px;color:var(--muted);max-width:600px;margin-bottom:40px}
+.arch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:32px}
+.arch-card{background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:22px}
+.arch-card-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.arch-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ai-gold{background:rgba(245,197,24,.12)}
+.ai-green{background:rgba(0,232,123,.12)}
+.ai-blue{background:rgba(77,171,255,.12)}
+.ai-red{background:rgba(255,68,68,.12)}
+.ai-purple{background:rgba(180,122,255,.12)}
+.arch-card-title{font-family:var(--font-d);font-size:17px;letter-spacing:.04em}
+.arch-card-body{font-size:13px;color:var(--muted);line-height:1.7}
+.arch-card-body strong{color:var(--text)}
+.arch-card-body code{background:var(--bg4);padding:2px 7px;border-radius:5px;font-size:12px;font-family:monospace;color:var(--blue)}
+.tech-stack{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ts-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;border:1px solid}
+.ts-node{color:#68a063;border-color:rgba(104,160,99,.3);background:rgba(104,160,99,.07)}
+.ts-react{color:#61DAFB;border-color:rgba(97,218,251,.3);background:rgba(97,218,251,.07)}
+.ts-pg{color:#336791;border-color:rgba(51,103,145,.3);background:rgba(51,103,145,.07);color:#6aaed6}
+.ts-pm{color:#3A83F0;border-color:rgba(58,131,240,.3);background:rgba(58,131,240,.07)}
+.ts-fb{color:#1877F2;border-color:rgba(24,119,242,.3);background:rgba(24,119,242,.07)}
+.ts-redis{color:#FF4438;border-color:rgba(255,68,56,.3);background:rgba(255,68,56,.07)}
+.ts-socket{color:#25c2a0;border-color:rgba(37,194,160,.3);background:rgba(37,194,160,.07)}
+.phase-flow{display:flex;flex-wrap:wrap;gap:0;align-items:center;margin-top:16px}
+.pf-step{background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.pf-arrow{font-size:14px;color:var(--muted);padding:0 4px}
+.pf-open{color:var(--blue)}
+.pf-filled{color:var(--gold)}
+.pf-cd{color:var(--purple)}
+.pf-spin{color:var(--red)}
+.pf-done{color:var(--green)}
+
+/* ── MOBILE: tablet ── */
+@media(max-width:600px){
+  .hdr{padding:11px 16px}
+  .logo{font-size:19px}
+  .hero{padding:36px 16px 32px}
+  .draw-title{font-size:clamp(28px,8vw,44px);margin-bottom:20px}
+  .ring-svg{width:260px;height:260px}
+  .rc-amount{font-size:clamp(48px,13vw,64px)}
+  .ring-stats{gap:22px}
+  .rstat-v{font-size:20px}
+  .body{padding:0 14px 80px}
+  .card{padding:20px 16px}
+  .bulk-grid{grid-template-columns:repeat(2,1fr)}
+  .pbtn{font-size:14px;padding:14px 16px}
+  .arch-section{padding:40px 16px}
+  /* Entry form tablet */
+  .efbox{padding:24px 22px}
+  .ef-group{margin-bottom:12px}
+}
+/* ── MOBILE: phone ── */
+@media(max-width:430px){
+  .ring-svg{width:88vw;height:88vw;max-width:300px;max-height:300px}
+  .rc-amount{font-size:clamp(42px,12vw,60px)}
+  .draw-title{font-size:clamp(26px,7.5vw,38px)}
+  .pw-strip{font-size:12px;padding:7px 14px;gap:6px}
+  .ring-stats{gap:16px;margin-top:6px}
+  .rstat-v{font-size:18px}
+  .rstat-l{font-size:9px}
+  .cd-time{font-size:52px}
+  .ps-timer{font-size:42px}
+  .reel{width:58px;height:78px}
+  .reel-digit{height:78px;width:58px;font-size:44px}
+  .rl-title{font-size:28px}
+  .reel-sep{font-size:46px}
+  .mbox{padding:22px 16px}
+  .rmbox{padding:22px 14px}
+  .bulk-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .trust{flex-direction:column;align-items:flex-start;gap:10px}
+  .trust-logos{gap:6px}
+  .arch-grid{grid-template-columns:1fr}
+  .dfab{bottom:16px;right:14px}
+  .dbtn{font-size:11px;padding:8px 13px}
+  /* Entry form phone — compact everything */
+  .efbox{padding:20px 16px !important}
+  .ef-head{margin-bottom:12px;gap:10px}
+  .ef-head-icon{width:38px;height:38px;font-size:18px}
+  .ef-title{font-size:22px}
+  .ef-sub{font-size:12px;padding:10px 12px;margin-bottom:14px}
+  .ef-group{margin-bottom:10px}
+  .ef-label{font-size:9px;margin-bottom:5px}
+  .ef-input{padding:10px 12px;font-size:14px}
+  .ef-prefix{padding:10px 10px;font-size:13px}
+  .ef-tog-btn{padding:9px 6px;font-size:12px}
+  .ef-warn{padding:10px 11px}
+  .ef-warn-ico{font-size:14px}
+  .ef-warn-txt{font-size:11px}
+  .ef-checkbox-row{margin-bottom:12px;gap:8px}
+  .ef-cb-txt{font-size:11px}
+  .ef-order{padding:10px 12px;margin-bottom:12px}
+  .ef-order-row{font-size:12px}
+  .ef-order-total .ef-order-val{font-size:18px}
+  .ef-divider{margin:12px 0}
+  .ef-submit{padding:13px 18px;font-size:14px}
+  .ef-secure{font-size:10px}
+  .ef-back{font-size:12px;padding:6px;margin-top:2px}
+  /* Admin payout box compact */
+  .payout-admin{padding:12px !important}
+  .payout-admin-title{font-size:9px !important}
+}
+</style>
+</head>
+<body>
+<div id="cfx"></div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo">🎰 RAFFLE<span>FORGE PH</span></div>
+  <div class="live-pill"><div class="ldot"></div>DRAW OPEN</div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div><div class="hero-grid"></div>
+  <div class="draw-eyebrow">Daily Grand Draw · Entry Pool</div>
+  <div class="draw-title">TONIGHT'S JACKPOT</div>
+  <div class="ring-wrap">
+    <svg class="ring-svg" viewBox="0 0 260 260">
+      <circle class="rt" cx="130" cy="130" r="116"/>
+      <circle class="rf" id="ring-fill" cx="130" cy="130" r="116"/>
+    </svg>
+    <div class="ring-center">
+      <div class="rc-label">Prize Pool</div>
+      <div class="rc-amount" id="prize-disp">₱20,000</div>
+      <div class="rc-pct" id="ring-pct">0% filled</div>
+    </div>
+  </div>
+  <div><div class="ring-status rs-open" id="ring-status">⚡ Accepting Entries</div></div>
+  <div class="ring-stats">
+    <div class="rstat"><div class="rstat-v" id="stat-in">0</div><div class="rstat-l">Entries In</div></div>
+    <div class="rstat"><div class="rstat-v" id="stat-target">2,000</div><div class="rstat-l">Target</div></div>
+    <div class="rstat"><div class="rstat-v" id="stat-left">2,000</div><div class="rstat-l">Remaining</div></div>
+  </div>
+  <div>
+    <div class="pw-strip" id="pw-strip">
+      <span>🏆</span>
+      <span class="pw-lbl">Last winner:</span>
+      <span class="pw-name" id="pw-name">Maria Santos</span>
+      <span class="pw-dt" id="pw-tick">· #1247 · May 9, 2026</span>
+    </div>
+  </div>
+</section>
+
+<!-- PAGE BODY -->
+<div class="body">
+
+  <!-- MECHANICS -->
+  <div class="card">
+    <div class="card-title">📋 How to Join</div>
+    <div class="mrow"><div class="mico">🎟️</div><div class="mtxt"><strong>₱20 per entry.</strong> Maximum <strong>20 entries per participant.</strong> More entries = bigger odds!</div></div>
+    <div class="mrow"><div class="mico">⚡</div><div class="mtxt"><strong>Auto-confirmation.</strong> Your ticket number is assigned instantly after payment — no manual verification.</div></div>
+    <div class="mrow"><div class="mico">🎰</div><div class="mtxt"><strong>Draw triggers automatically</strong> once all entries are filled. A 1-hour countdown begins, then the roulette spins live.</div></div>
+    <div class="mrow"><div class="mico">💸</div><div class="mtxt">Winner receives <strong>₱20,000 cash</strong> via GCash or Maya — released immediately after the draw.</div></div>
+    <div class="mrow"><div class="mico">🔒</div><div class="mtxt">Entry pool <strong>auto-locks</strong> when the target is reached. No entries accepted after that.</div></div>
+  </div>
+
+  <!-- PURCHASE CARD -->
+  <div class="card" id="purchase-card">
+    <div class="card-title">🎟️ Get Your Entries</div>
+    <div id="ind-section">
+      <div class="sec-lbl">Choose quantity (1–20 entries)</div>
+      <div class="sel-row">
+        <select class="qty-sel" id="qty-sel" onchange="syncInd()">
+          <option value="1">1 entry</option><option value="2">2 entries</option><option value="3">3 entries</option>
+          <option value="4">4 entries</option><option value="5">5 entries</option><option value="6">6 entries</option>
+          <option value="7">7 entries</option><option value="8">8 entries</option><option value="9">9 entries</option>
+          <option value="10">10 entries</option><option value="11">11 entries</option><option value="12">12 entries</option>
+          <option value="13">13 entries</option><option value="14">14 entries</option><option value="15">15 entries</option>
+          <option value="16">16 entries</option><option value="17">17 entries</option><option value="18">18 entries</option>
+          <option value="19">19 entries</option><option value="20">20 entries (MAX)</option>
+        </select>
+        <div class="price-tag"><div class="pt-lbl">Total</div><div class="pt-val" id="ind-total">₱20</div></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="sec-lbl">🏷️ Or pick a bundle — save more!</div>
+    <div class="bulk-grid" id="bulk-grid"></div>
+    <button class="pbtn" id="pbtn" onclick="doPurchase()">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4m1.6 8L6 6H3m4 7v6m6-6v6"/></svg>
+      <span id="pbtn-txt">PAY ₱20 via PayMongo</span>
+    </button>
+    <div class="pbtn-note" id="pbtn-note">You'll be redirected to PayMongo secure checkout</div>
+  </div>
+
+  <!-- CLOSED BOX -->
+  <div class="closed-box" id="closed-box">
+    <div class="cb-title">🔒 ENTRIES CLOSED</div>
+    <div class="cb-sub">All <span id="closed-total"></span> entries are filled. The draw countdown has started!</div>
+  </div>
+
+  <!-- WINNERS LIST -->
+  <div class="card">
+    <div class="card-title">🏆 Recent Winners</div>
+    <div class="winners-scroll">
+    <table class="wtbl"><thead><tr><th>Name</th><th>Ticket #</th><th>Prize</th><th>Date</th></tr></thead>
+    <tbody id="winners-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- TRUST BAR -->
+  <div class="trust">
+    <div>🔐</div>
+    <div class="trust-txt"><strong>Secured by PayMongo.</strong> BSP-regulated. Trusted by thousands of PH businesses.</div>
+    <div class="trust-logos">
+      <div class="tlogo tl-pm">PayMongo</div>
+      <div class="tlogo tl-gc">GCash</div>
+      <div class="tlogo tl-my">Maya</div>
+      <div class="tlogo tl-vi">VISA</div>
+      <div class="tlogo tl-mc">Mastercard</div>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE SECTION -->
+<section class="arch-section">
+  <div class="arch-body">
+    <div class="arch-eyebrow">Full-Stack Architecture Plan</div>
+    <div class="arch-title">HOW TO BUILD THIS FOR REAL</div>
+    <div class="arch-sub">Complete technical roadmap to turn this prototype into a production-grade automated raffle system.</div>
+
+    <div class="arch-grid">
+      <div class="arch-card">
+        <div class="arch-card-top"><div class="arch-icon ai-gold">🏗️</div><div class="arch-card-title">Backend API</div></div>
+        <div class="arch-card-body">
+          <strong>Node.js + Express</strong> REST API with PostgreSQL. Core tables: <code>draws</code>, <code>entries</code>, <code>payments</code>, <code>winners</code>. Use <strong>Redis</strong> for real-time entry count + WebSocket pub/sub. Each confirmed payment triggers an <code>AUTO_ASSIGN</code> function that returns a padded ticket number instantly.
+          <div class="tech-stack"><span class="ts-badge ts-node">Node.js</span><span class="ts-badge ts-pg">PostgreSQL</span><span class="ts-badge ts-redis">Redis</span><span class="ts-badge ts-socket">Socket.io</span></div>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-card-top"><div class="arch-icon ai-blue">💳</div><div class="arch-card-title">PayMongo Integration</div></div>
+        <div class="arch-card-body">
+          Create a <code>PaymentIntent</code> for ₱20 (or bulk price) on button click → redirect to PayMongo checkout. Set up a <strong>webhook endpoint</strong> at <code>/webhooks/paymongo</code>. When <code>payment.paid</code> fires, auto-confirm entry, assign ticket, send SMS/email. <strong>No manual GCash verification at all.</strong>
+          <div class="tech-stack"><span class="ts-badge ts-pm">PayMongo API</span></div>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-card-top"><div class="arch-icon ai-green">📡</div><div class="arch-card-title">Real-Time Progress</div></div>
+        <div class="arch-card-body">
+          <strong>Socket.io</strong> broadcasts <code>ENTRY_UPDATE</code> events to all connected clients after every payment webhook. The frontend's progress ring updates live — every participant sees the pool filling in real time. When entries hit target, server emits <code>DRAW_TRIGGERED</code> and the countdown auto-starts for all clients simultaneously.
+          <div class="tech-stack"><span class="ts-badge ts-socket">WebSockets</span><span class="ts-badge ts-redis">Redis Pub/Sub</span></div>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-card-top"><div class="arch-icon ai-purple">🎰</div><div class="arch-card-title">Draw & Roulette Engine</div></div>
+        <div class="arch-card-body">
+          Server uses <strong>crypto.randomInt()</strong> (cryptographically secure) to pick the winner from confirmed entries. The result is sealed + timestamped before the roulette visually spins — ensuring no tampering. Roulette digits are calculated server-side and broadcast to all clients via WebSocket so everyone sees the same spin simultaneously.
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-card-top"><div class="arch-icon ai-red">📣</div><div class="arch-card-title">Notifications</div></div>
+        <div class="arch-card-body">
+          Use <strong>Twilio SMS</strong> for: entry confirmation (ticket #), winner announcement, prize release confirmation. Optional: Facebook Messenger via <code>facebook-messenger-api</code> for in-app notifications to participants who joined via FB ad link. Auto-post winner to your Facebook page via <strong>Meta Graph API</strong>.
+          <div class="tech-stack"><span class="ts-badge ts-fb">Meta Graph API</span></div>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-card-top"><div class="arch-icon ai-gold">🖥️</div><div class="arch-card-title">Frontend Stack</div></div>
+        <div class="arch-card-body">
+          <strong>React + Vite</strong> SPA. This prototype becomes your component library. Deploy on <strong>Vercel</strong> (free tier). Custom domain: <code>dailydraw.ph</code>. Facebook ad links point directly here. Mobile-first — 80%+ of your traffic will be from phones clicking FB ads. PWA manifest for "Add to Home Screen" stickiness.
+          <div class="tech-stack"><span class="ts-badge ts-react">React</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-card" style="margin-bottom:0">
+      <div class="arch-card-top"><div class="arch-icon ai-green">🔄</div><div class="arch-card-title">Automated Flow — Phase Transitions</div></div>
+      <div class="arch-card-body" style="margin-bottom:14px">Every transition is server-triggered. Zero human intervention required once the draw is live.</div>
+      <div class="phase-flow">
+        <span class="pf-step pf-open">OPEN</span><span class="pf-arrow">→</span>
+        <span class="pf-step pf-filled">FILLED</span><span class="pf-arrow">→</span>
+        <span class="pf-step pf-cd">COUNTDOWN 1HR</span><span class="pf-arrow">→</span>
+        <span class="pf-step pf-spin">PRE-SPIN 60s</span><span class="pf-arrow">→</span>
+        <span class="pf-step pf-spin">SPINNING</span><span class="pf-arrow">→</span>
+        <span class="pf-step pf-done">WINNER REVEALED</span><span class="pf-arrow">→</span>
+        <span class="pf-step pf-open">NEXT DRAW OPENS</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO FAB -->
+<div class="dfab">
+  <div class="dfab-lbl">DEMO CONTROLS</div>
+  <button class="dbtn" id="dfill" onclick="demoFill()">▶ Auto-fill Entries</button>
+  <button class="dbtn" onclick="demoReset()">↺ Reset Draw</button>
+</div>
+
+<!-- ENTRY FORM MODAL -->
+<div class="overlay" id="ef-modal">
+  <div class="mbox efbox">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(245,197,24,.05),transparent 70%);pointer-events:none;border-radius:22px"></div>
+
+    <!-- Form view -->
+    <div id="ef-form-view">
+      <div class="ef-head">
+        <div class="ef-head-icon">🎟️</div>
+        <div>
+          <div class="ef-title">Almost There!</div>
+          <div style="font-size:12px;color:var(--muted)">Step 2 of 2 · Payout Details</div>
+        </div>
+      </div>
+      <div class="ef-sub">
+        <strong>Why we ask this:</strong> If you win, we send your ₱20,000 prize directly to this GCash or Maya number — immediately after the draw. No need to contact us.
+      </div>
+
+      <!-- Full Name -->
+      <div class="ef-group">
+        <label class="ef-label" for="ef-name">Full Name <span class="ef-req">*</span></label>
+        <input class="ef-input" id="ef-name" type="text" placeholder="e.g. Juan dela Cruz" autocomplete="name" oninput="efClearErr('ef-name','ef-name-err')">
+        <div class="ef-err" id="ef-name-err">Please enter your full name</div>
+      </div>
+
+      <!-- GCash or Maya toggle -->
+      <div class="ef-group">
+        <label class="ef-label">Payout Method <span class="ef-req">*</span></label>
+        <div class="ef-toggle">
+          <button class="ef-tog-btn on" id="tog-gcash" onclick="setPayType('gcash')">
+            <span>💙</span> GCash
+          </button>
+          <button class="ef-tog-btn" id="tog-maya" onclick="setPayType('maya')">
+            <span>💚</span> Maya
+          </button>
+        </div>
+        <label class="ef-label">
+          <span id="ef-phone-lbl">GCash Number</span> <span class="ef-req">*</span>
+        </label>
+        <div class="ef-phone-row">
+          <div class="ef-prefix">🇵🇭 +63</div>
+          <input class="ef-input" id="ef-phone" type="tel" placeholder="9XX XXX XXXX" maxlength="10" oninput="efClearErr('ef-phone','ef-phone-err');efFormatPhone(this)">
+        </div>
+        <div class="ef-err" id="ef-phone-err">Please enter a valid 10-digit mobile number</div>
+      </div>
+
+      <!-- Email -->
+      <div class="ef-group">
+        <label class="ef-label" for="ef-email">Email Address <span class="ef-req">*</span></label>
+        <input class="ef-input" id="ef-email" type="email" placeholder="you@email.com" autocomplete="email" oninput="efClearErr('ef-email','ef-email-err')">
+        <div class="ef-err" id="ef-email-err">Please enter a valid email address</div>
+      </div>
+
+      <div class="ef-divider"></div>
+
+      <!-- Warning -->
+      <div class="ef-warn">
+        <div class="ef-warn-ico">⚠️</div>
+        <div class="ef-warn-txt">
+          <strong>Double-check your number.</strong> Prize money will be sent to the GCash/Maya number you provide above. Wrong numbers cannot be recovered after the draw.
+        </div>
+      </div>
+
+      <!-- Checkbox -->
+      <div class="ef-checkbox-row">
+        <input class="ef-cb" type="checkbox" id="ef-agree" onchange="efToggleSubmit()">
+        <label class="ef-cb-txt" for="ef-agree">
+          I confirm this <strong>GCash/Maya number is correct</strong> and I accept full responsibility. Incorrect numbers = forfeited prize. I am 18 years old or above.
+        </label>
+      </div>
+
+      <!-- Order summary -->
+      <div class="ef-order">
+        <div class="ef-order-row">
+          <span class="ef-order-lbl">Entries</span>
+          <span class="ef-order-val" id="ef-sum-qty">1 entry</span>
+        </div>
+        <div class="ef-order-row">
+          <span class="ef-order-lbl">Prize Pool</span>
+          <span class="ef-order-val" style="color:var(--green)">₱20,000</span>
+        </div>
+        <div class="ef-order-row ef-order-total">
+          <span class="ef-order-lbl">Total Payment</span>
+          <span class="ef-order-val" id="ef-sum-total">₱20</span>
+        </div>
+      </div>
+
+      <button class="ef-submit" id="ef-submit" disabled onclick="submitEntryForm()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        PROCEED TO PAYMENT
+      </button>
+      <div class="ef-secure">🔐 Secured by PayMongo · SSL Encrypted · BSP Regulated</div>
+      <button class="ef-back" onclick="closeEF()">← Go back</button>
+    </div>
+
+    <!-- Success view (post-payment) -->
+    <div class="pay-success" id="ef-success-view">
+      <div class="ps-check">✅</div>
+      <div class="ps-title">ENTRY CONFIRMED!</div>
+      <!-- Ticket numbers: single or range — populated by JS -->
+      <div id="ps-tickets-area" class="ps-tickets-area"></div>
+      <div class="ps-tkt">Name: <span id="ps-winner-name">—</span></div>
+      <div class="ps-payout" id="ps-payout-info">
+        Prize payout to: <strong id="ps-payout-num">GCash +63 9XX XXX XXXX</strong><br>
+        <span style="font-size:11px;color:var(--muted2)">Keep this info. If you win, ₱20,000 goes here automatically.</span>
+      </div>
+      <button class="claim-btn" style="margin-top:20px;width:100%" onclick="closeEFSuccess()">Done — Watch the Draw! 🎰</button>
+    </div>
+  </div>
+</div>
+
+<!-- COUNTDOWN MODAL -->
+<div class="overlay" id="cd-modal">
+  <div class="mbox">
+    <div class="cd-glow"></div>
+    <div class="cd-icon">⏳</div>
+    <div class="cd-title">ENTRIES LOCKED</div>
+    <div class="cd-sub">All entry slots filled. Draw begins shortly!</div>
+    <div class="cd-time" id="cd-time">00:30</div>
+    <div class="cd-timelbl">until the roulette spins</div>
+    <div class="cd-info"><strong id="cd-cnt">2,000</strong> confirmed entries · Grand Prize: <strong style="color:var(--gold)">₱20,000</strong></div>
+  </div>
+</div>
+
+<!-- ROULETTE MODAL -->
+<div class="overlay" id="rl-modal">
+  <div class="mbox rmbox">
+    <div class="rl-glow"></div>
+    <div class="rl-ey">Live Draw · RaffleForge PH</div>
+    <div class="rl-title" id="rl-title">DRAWING NOW</div>
+    <div class="rl-prize">Tonight's Grand Prize: <strong>₱20,000</strong></div>
+    <div class="ps-area" id="ps-area">
+      <div class="ps-lbl">Spinning in</div>
+      <div class="ps-timer" id="ps-timer">10</div>
+    </div>
+    <div class="reels-shell">
+      <div class="reels-shine"></div>
+      <div class="reels-row" id="reels-row"></div>
+    </div>
+    <div class="wr" id="wr">
+      <div class="wr-name" id="wr-name">—</div>
+      <div class="wr-tkt">Winning Ticket: <span id="wr-tkt">#0000</span></div>
+      <!-- ORGANIZER ONLY — hidden by default, revealed on button click -->
+      <button class="payout-toggle-btn" id="payout-toggle" onclick="togglePayoutBox()">
+        🔒 Reveal Payout Details (Organizer Only)
+      </button>
+      <div class="payout-admin" id="payout-admin">
+        <div class="payout-admin-title">📤 Organizer Payout Details — Private</div>
+        <div class="payout-row">
+          <span class="payout-key">Winner Name</span>
+          <span class="payout-val" id="pa-name">—</span>
+        </div>
+        <div class="payout-row">
+          <span class="payout-key">Payout via</span>
+          <span class="payout-val" id="pa-method">GCash</span>
+        </div>
+        <div class="payout-row">
+          <span class="payout-key">Send ₱20,000 to</span>
+          <span class="payout-num" id="pa-number">+63 9XX XXX XXXX</span>
+        </div>
+        <div class="payout-row">
+          <span class="payout-key">Email</span>
+          <span class="payout-val" id="pa-email" style="font-size:12px;color:var(--muted)">—</span>
+        </div>
+        <div class="payout-action-note">
+          📱 Open GCash/Maya → Send Money → paste number above → send ₱20,000
+        </div>
+      </div>
+      <button class="claim-btn" style="width:100%" onclick="closeRoulette()">✅ Prize Sent — Close Draw</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════ STATE ═══════════
+const S = {
+  prize:20000, ep:20, maxE:2000,
+  cur:0, phase:'OPEN',
+  cdSec:30, psSec:10,
+  cdTimer:null, psTimer:null, demoIv:null, demoRun:false,
+  selBulk:null, winTicket:null, winName:null,
+  winners:[
+    {name:'Maria Santos',    tkt:'1247',date:'May 9, 2026',  prize:'₱20,000'},
+    {name:'Jose Reyes',      tkt:'0889',date:'May 8, 2026',  prize:'₱20,000'},
+    {name:'Ana Cruz',        tkt:'1563',date:'May 7, 2026',  prize:'₱20,000'},
+    {name:'Carlo Dela Torre',tkt:'0234',date:'May 6, 2026',  prize:'₱20,000'},
+    {name:'Rica Villanueva', tkt:'1891',date:'May 5, 2026',  prize:'₱20,000'},
+    {name:'Bong Aquino',     tkt:'0741',date:'May 4, 2026',  prize:'₱20,000'},
+    {name:'Grace Lim',       tkt:'1302',date:'May 3, 2026',  prize:'₱20,000'},
+    {name:'Noel Bautista',   tkt:'0558',date:'May 2, 2026',  prize:'₱20,000'},
+    {name:'Cherry Flores',   tkt:'1978',date:'May 1, 2026',  prize:'₱20,000'},
+    {name:'Mark Delos Reyes',tkt:'0415',date:'Apr 30, 2026', prize:'₱20,000'},
+    {name:'Jessa Ramos',     tkt:'1100',date:'Apr 29, 2026', prize:'₱20,000'},
+    {name:'Rodel Cruz',      tkt:'0073',date:'Apr 28, 2026', prize:'₱20,000'},
+  ],
+  deals:[
+    {id:'b1',qty:5, price:95, sav:5, pop:false},
+    {id:'b2',qty:10,price:180,sav:20,pop:true},
+    {id:'b3',qty:15,price:255,sav:45,pop:false},
+    {id:'b4',qty:20,price:320,sav:80,pop:false},
+  ],
+  CIRC: 2*Math.PI*116,
+  pending: null,
+  payType: 'gcash',
+  lastParticipant: null,
+};
+
+// ═══════════ INIT ═══════════
+function init(){
+  renderWinners();
+  renderBulk();
+  renderUI();
+  syncInd();
+}
+
+// ═══════════ RENDER ═══════════
+function renderWinners(){
+  document.getElementById('winners-tbody').innerHTML =
+    S.winners.map(w=>`<tr><td class="wname">${w.name}</td><td class="wtkt">#${w.tkt}</td><td class="wprize">${w.prize}</td><td class="wdate">${w.date}</td></tr>`).join('');
+}
+
+function renderBulk(){
+  document.getElementById('bulk-grid').innerHTML = S.deals.map(d=>`
+    <div class="bcard${S.selBulk===d.id?' sel':''}" id="bc-${d.id}" onclick="selBulk('${d.id}')">
+      ${d.pop?'<div class="bpop">BEST DEAL</div>':''}
+      <div class="bqty">${d.qty}</div>
+      <div class="belbl">entries</div>
+      <div class="bprice">₱${d.price}</div>
+      <div class="bsave">Save ₱${d.sav}</div>
+    </div>`).join('');
+}
+
+function syncInd(){
+  const q=parseInt(document.getElementById('qty-sel').value)||1;
+  document.getElementById('ind-total').textContent='₱'+(q*S.ep);
+  if(!S.selBulk) setPBtn(q,q*S.ep,false);
+}
+
+function selBulk(id){
+  S.selBulk = S.selBulk===id?null:id;
+  renderBulk();
+  if(S.selBulk){const d=S.deals.find(x=>x.id===id);setPBtn(d.qty,d.price,true);}
+  else syncInd();
+}
+
+function setPBtn(qty,price,bulk){
+  document.getElementById('pbtn-txt').textContent=bulk?`PAY ₱${price} · ${qty} Entries (Bundle)`:`PAY ₱${price} via PayMongo`;
+}
+
+// ═══════════ UI UPDATE ═══════════
+function renderUI(){
+  const p=Math.min(1,S.cur/S.maxE);
+  const ring=document.getElementById('ring-fill');
+  ring.style.strokeDashoffset=S.CIRC*(1-p);
+  if(p>=1){ring.classList.add('full');}else{ring.classList.remove('full');}
+  const pct=Math.round(p*100);
+  document.getElementById('ring-pct').textContent=pct+'% filled';
+  document.getElementById('stat-in').textContent=S.cur.toLocaleString();
+  document.getElementById('stat-target').textContent=S.maxE.toLocaleString();
+  document.getElementById('stat-left').textContent=Math.max(0,S.maxE-S.cur).toLocaleString();
+  const rs=document.getElementById('ring-status');
+  rs.className='ring-status';
+  if(S.phase==='OPEN'){rs.classList.add('rs-open');rs.textContent=`⚡ Accepting Entries — ${pct}%`;}
+  else if(S.phase==='COUNTDOWN'){rs.classList.add('rs-full');rs.textContent='✅ ENTRIES FULL — Draw Starting';}
+  else if(['PRE_SPIN','SPINNING'].includes(S.phase)){rs.classList.add('rs-draw');rs.textContent='🎰 DRAW IN PROGRESS';}
+  else if(S.phase==='REVEALED'){rs.classList.add('rs-full');rs.textContent='🏆 WINNER REVEALED';}
+}
+
+// ═══════════ PURCHASE → OPEN FORM ═══════════
+function doPurchase(){
+  if(S.phase!=='OPEN') return;
+  let qty,price;
+  if(S.selBulk){const d=S.deals.find(x=>x.id===S.selBulk);qty=d.qty;price=d.price;}
+  else{qty=parseInt(document.getElementById('qty-sel').value)||1;price=qty*S.ep;}
+  // Store pending order
+  S.pending={qty,price};
+  // Populate order summary in form
+  document.getElementById('ef-sum-qty').textContent=qty===1?'1 entry':`${qty} entries`;
+  document.getElementById('ef-sum-total').textContent=`₱${price}`;
+  // Reset form
+  document.getElementById('ef-form-view').style.display='block';
+  document.getElementById('ef-success-view').classList.remove('show');
+  document.getElementById('ef-name').value='';
+  document.getElementById('ef-phone').value='';
+  document.getElementById('ef-email').value='';
+  document.getElementById('ef-agree').checked=false;
+  document.getElementById('ef-submit').disabled=true;
+  ['ef-name','ef-phone','ef-email'].forEach(id=>{
+    document.getElementById(id).classList.remove('err');
+  });
+  ['ef-name-err','ef-phone-err','ef-email-err'].forEach(id=>{
+    document.getElementById(id).classList.remove('show');
+  });
+  S.payType='gcash';
+  document.getElementById('tog-gcash').classList.add('on');
+  document.getElementById('tog-maya').classList.remove('on');
+  document.getElementById('ef-phone-lbl').textContent='GCash Number';
+  document.getElementById('ef-modal').classList.add('open');
+}
+
+// ═══════════ ENTRY FORM HELPERS ═══════════
+function setPayType(type){
+  S.payType=type;
+  document.getElementById('tog-gcash').classList.toggle('on',type==='gcash');
+  document.getElementById('tog-maya').classList.toggle('on',type==='maya');
+  document.getElementById('ef-phone-lbl').textContent=type==='gcash'?'GCash Number':'Maya Number';
+  document.getElementById('ef-phone').placeholder=type==='gcash'?'9XX XXX XXXX':'9XX XXX XXXX';
+  efClearErr('ef-phone','ef-phone-err');
+}
+
+function efFormatPhone(el){
+  // Strip non-digits, limit to 10
+  el.value=el.value.replace(/\D/g,'').slice(0,10);
+}
+
+function efClearErr(inputId,errId){
+  document.getElementById(inputId).classList.remove('err');
+  document.getElementById(errId).classList.remove('show');
+  efToggleSubmit();
+}
+
+function efToggleSubmit(){
+  const agreed=document.getElementById('ef-agree').checked;
+  const name=document.getElementById('ef-name').value.trim().length>1;
+  const phone=document.getElementById('ef-phone').value.replace(/\D/g,'').length===10;
+  const email=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('ef-email').value.trim());
+  document.getElementById('ef-submit').disabled=!(agreed&&name&&phone&&email);
+}
+
+function efValidate(){
+  let ok=true;
+  const name=document.getElementById('ef-name').value.trim();
+  const phone=document.getElementById('ef-phone').value.replace(/\D/g,'');
+  const email=document.getElementById('ef-email').value.trim();
+  if(name.length<2){document.getElementById('ef-name').classList.add('err');document.getElementById('ef-name-err').classList.add('show');ok=false;}
+  if(phone.length!==10){document.getElementById('ef-phone').classList.add('err');document.getElementById('ef-phone-err').classList.add('show');ok=false;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){document.getElementById('ef-email').classList.add('err');document.getElementById('ef-email-err').classList.add('show');ok=false;}
+  return ok;
+}
+
+function submitEntryForm(){
+  if(!efValidate()) return;
+  const name=document.getElementById('ef-name').value.trim();
+  const phone=document.getElementById('ef-phone').value.replace(/\D/g,'');
+  const email=document.getElementById('ef-email').value.trim();
+  const payType=S.payType||'gcash';
+  const {qty,price}=S.pending||{qty:1,price:S.ep};
+
+  // Store participant data
+  S.lastParticipant={name,phone,email,payType,qty,price};
+
+  // ── In production: call your Node.js API to create a PayMongo PaymentIntent,
+  //    then redirect to the checkout URL. The webhook fires on payment.paid,
+  //    assigns the ticket, and sends SMS confirmation.
+  // ── Demo: simulate payment processing
+  const btn=document.getElementById('ef-submit');
+  btn.disabled=true;
+  btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .8s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Processing...';
+
+  setTimeout(()=>{
+    const {qty,price}=S.pending||{qty:1,price:S.ep};
+    const pad=String(S.maxE).length;
+    const startNum=S.cur+1;                      // first ticket in this batch
+    S.cur=Math.min(S.maxE,S.cur+qty);            // advance counter
+    const endNum=S.cur;                          // last ticket in this batch
+    const actualQty=endNum-startNum+1;           // in case pool caps
+
+    // Build ticket display HTML
+    const area=document.getElementById('ps-tickets-area');
+    if(actualQty===1){
+      area.innerHTML=`<div class="ps-tkt">Your ticket: <strong style="color:var(--gold);font-size:17px">#${String(endNum).padStart(pad,'0')}</strong></div>`;
+    } else if(actualQty<=8){
+      const chips=Array.from({length:actualQty},(_,i)=>`<span class="tkt-chip">#${String(startNum+i).padStart(pad,'0')}</span>`).join('');
+      area.innerHTML=`<div class="ps-tkt-range">Your ${actualQty} ticket numbers:</div><div class="ps-tkt-chips">${chips}</div>`;
+    } else {
+      area.innerHTML=`
+        <div class="ps-tkt-range">Your ticket numbers:</div>
+        <div class="ps-tkt-big">#${String(startNum).padStart(pad,'0')} — #${String(endNum).padStart(pad,'0')}</div>
+        <div class="ps-tkt-count">✅ ${actualQty} entries registered in this draw</div>`;
+    }
+
+    // Payout info
+    const phone=document.getElementById('ef-phone').value.replace(/\D/g,'');
+    const payType=S.payType||'gcash';
+    document.getElementById('ef-form-view').style.display='none';
+    document.getElementById('ps-winner-name').textContent=document.getElementById('ef-name').value.trim();
+    document.getElementById('ps-payout-num').textContent=`${payType==='gcash'?'GCash':'Maya'} +63 ${phone.slice(0,3)} ${phone.slice(3,6)} ${phone.slice(6)}`;
+    document.getElementById('ef-success-view').classList.add('show');
+
+    renderUI();
+    if(S.cur>=S.maxE) setTimeout(triggerFilled,2000);
+  },1800);
+}
+
+function closeEF(){
+  document.getElementById('ef-modal').classList.remove('open');
+}
+
+function closeEFSuccess(){
+  document.getElementById('ef-modal').classList.remove('open');
+  const qty=S.pending?.qty||1;
+  toast(`🎟️ You're in! Watch the draw — good luck!`,3000);
+}
+
+// ═══════════ ORGANIZER PAYOUT TOGGLE ═══════════
+function togglePayoutBox(){
+  const box=document.getElementById('payout-admin');
+  const btn=document.getElementById('payout-toggle');
+  const isOpen=box.classList.contains('open');
+  if(isOpen){
+    box.classList.remove('open');
+    btn.textContent='🔒 Reveal Payout Details (Organizer Only)';
+    btn.classList.remove('revealed');
+  } else {
+    box.classList.add('open');
+    btn.textContent='🔓 Hide Payout Details';
+    btn.classList.add('revealed');
+  }
+}
+
+// ═══════════ PHASE: FILLED ═══════════
+function triggerFilled(){
+  if(S.phase!=='OPEN') return;
+  S.phase='COUNTDOWN'; S.cur=S.maxE;
+  renderUI();
+  const pc=document.getElementById('purchase-card');
+  pc.style.opacity='.35'; pc.style.pointerEvents='none';
+  document.getElementById('closed-box').classList.add('show');
+  document.getElementById('closed-total').textContent=S.maxE.toLocaleString();
+  document.getElementById('pbtn').disabled=true;
+  setTimeout(startCD, 800);
+}
+
+function startCD(){
+  let sec=S.cdSec;
+  document.getElementById('cd-cnt').textContent=S.maxE.toLocaleString();
+  updCD(sec);
+  document.getElementById('cd-modal').classList.add('open');
+  S.cdTimer=setInterval(()=>{
+    sec--;updCD(sec);
+    if(sec<=0){clearInterval(S.cdTimer);document.getElementById('cd-modal').classList.remove('open');setTimeout(startRL,500);}
+  },1000);
+}
+
+function updCD(s){
+  const m=Math.floor(s/60),ss=s%60;
+  document.getElementById('cd-time').textContent=String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+}
+
+// ═══════════ PHASE: ROULETTE ═══════════
+function startRL(){
+  S.phase='PRE_SPIN';
+  S.winTicket=Math.floor(Math.random()*S.maxE)+1;
+  const names=['Jessa Reyes','Carlo Mendez','Liza Santos','Mark Delos Reyes','Ana Villanueva','Rodel Cruz','Grace Lim','Ben Aquino','Cherry Flores','Noel Bautista'];
+  S.winName=names[Math.floor(Math.random()*names.length)];
+  const nd=String(S.maxE).length;
+  buildReels(nd);
+  document.getElementById('rl-modal').classList.add('open');
+  document.getElementById('rl-title').textContent='DRAWING NOW';
+  document.getElementById('wr').classList.remove('show');
+  document.getElementById('ps-area').style.display='block';
+  let pss=S.psSec;
+  const pst=document.getElementById('ps-timer');
+  pst.textContent=pss; pst.classList.remove('urg');
+  S.psTimer=setInterval(()=>{
+    pss--; pst.textContent=pss;
+    if(pss<=3) pst.classList.add('urg');
+    if(pss<=0){clearInterval(S.psTimer);document.getElementById('ps-area').style.display='none';spinReels();}
+  },1000);
+}
+
+function buildReels(nd){
+  const row=document.getElementById('reels-row');
+  row.innerHTML='';
+  const padded=String(S.winTicket).padStart(nd,'0');
+  const DH=90, reps=22;
+  for(let i=0;i<nd;i++){
+    if(nd>=5 && i===nd-3){
+      const sep=document.createElement('div');sep.className='reel-sep';sep.textContent=',';row.appendChild(sep);
+    }
+    const wrap=document.createElement('div');wrap.className='reel-wrap';
+    let html='';
+    for(let r=0;r<reps;r++) for(let d=0;d<10;d++) html+=`<div class="reel-digit">${d}</div>`;
+    wrap.innerHTML=`<div class="reel" id="r${i}"><div class="reel-strip" id="rs${i}">${html}</div><div class="reel-ctr"></div></div><div class="reel-idx">D${i+1}</div>`;
+    row.appendChild(wrap);
+  }
+}
+
+function spinReels(){
+  S.phase='SPINNING';
+  document.getElementById('rl-title').textContent='SPINNING...';
+  const nd=String(S.maxE).length;
+  const padded=String(S.winTicket).padStart(nd,'0');
+  const DH=90, reps=22;
+  const cycs=[12,14,16,18,20];
+  const durs=[2200,2700,3200,3700,4200];
+  for(let i=0;i<nd;i++){
+    const strip=document.getElementById('rs'+i);
+    const tgt=parseInt(padded[i]);
+    const c=cycs[Math.min(i,4)], dur=durs[Math.min(i,4)];
+    strip.style.transition='none';
+    strip.style.transform='translateY(0px)';
+    const fi=c*10+tgt;
+    const fy=-(fi*DH);
+    const delay=i*90+80;
+    setTimeout(()=>{
+      strip.style.transition=`transform ${dur}ms cubic-bezier(0.03,0.92,0.1,1.0)`;
+      strip.style.transform=`translateY(${fy}px)`;
+    },delay);
+    setTimeout(()=>{
+      const r=document.getElementById('r'+i);
+      r.classList.add('locked');
+      r.style.background='linear-gradient(to bottom,rgba(245,197,24,.15),rgba(245,197,24,.03),rgba(245,197,24,.15))';
+      setTimeout(()=>{r.style.background='';},400);
+    },delay+dur+100);
+  }
+  const last=(nd-1)*90+80+durs[Math.min(nd-1,4)]+500;
+  setTimeout(revealWinner,last);
+}
+
+function revealWinner(){
+  S.phase='REVEALED';
+  const padded=String(S.winTicket).padStart(String(S.maxE).length,'0');
+  document.getElementById('rl-title').textContent='🎉 WINNER!';
+  document.getElementById('wr-name').textContent=S.winName;
+  document.getElementById('wr-tkt').textContent='#'+padded;
+
+  // Populate organizer payout admin box
+  const p=S.lastParticipant;
+  if(p){
+    document.getElementById('pa-name').textContent=p.name;
+    document.getElementById('pa-method').textContent=p.payType==='gcash'?'💙 GCash':'💚 Maya';
+    const fmt=p.phone.slice(0,3)+' '+p.phone.slice(3,6)+' '+p.phone.slice(6);
+    document.getElementById('pa-number').textContent='+63 '+fmt;
+    document.getElementById('pa-email').textContent=p.email;
+  } else {
+    // Demo mode: no real participant, show placeholder
+    document.getElementById('pa-name').textContent=S.winName;
+    document.getElementById('pa-method').textContent='💙 GCash';
+    document.getElementById('pa-number').textContent='+63 917 XXX XXXX';
+    document.getElementById('pa-email').textContent='(stored in database)';
+  }
+
+  document.getElementById('wr').classList.add('show');
+  confetti();
+  renderUI();
+}
+
+function closeRoulette(){
+  document.getElementById('rl-modal').classList.remove('open');
+  const padded=String(S.winTicket).padStart(String(S.maxE).length,'0');
+  document.getElementById('pw-name').textContent=S.winName;
+  const d=new Date();
+  document.getElementById('pw-tick').textContent=`· #${padded} · ${d.toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'})}`;
+  S.winners.unshift({name:S.winName,tkt:padded,date:d.toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'}),prize:'₱20,000'});
+  renderWinners();
+}
+
+// ═══════════ CONFETTI ═══════════
+function confetti(){
+  const cols=['#F5C518','#00E87B','#FF4444','#4DABFF','#ffffff','#FFD700','#FF69B4'];
+  const c=document.getElementById('cfx');
+  for(let i=0;i<110;i++){
+    const el=document.createElement('div'); el.className='cb';
+    const sz=4+Math.random()*10;
+    el.style.cssText=`left:${Math.random()*100}%;background:${cols[Math.floor(Math.random()*cols.length)]};width:${sz}px;height:${sz}px;animation-delay:${Math.random()*1.8}s;animation-duration:${2.5+Math.random()*2.5}s;transform:rotate(${Math.random()*360}deg);border-radius:${Math.random()>.5?'50%':'2px'}`;
+    c.appendChild(el); setTimeout(()=>el.remove(),6000);
+  }
+}
+
+// ═══════════ TOAST ═══════════
+function toast(msg,d=2800){
+  const el=document.createElement('div'); el.className='toast-el'; el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.style.opacity='0',d-300); setTimeout(()=>el.remove(),d);
+}
+
+// ═══════════ DEMO ═══════════
+function demoFill(){
+  if(S.phase!=='OPEN'||S.demoRun) return;
+  S.demoRun=true; const btn=document.getElementById('dfill');
+  btn.textContent='⏳ Filling...'; btn.classList.add('act');
+  const step=Math.ceil(S.maxE/85);
+  S.demoIv=setInterval(()=>{
+    S.cur=Math.min(S.maxE,S.cur+step); renderUI();
+    if(S.cur>=S.maxE){clearInterval(S.demoIv);S.demoRun=false;btn.textContent='✅ Full';triggerFilled();}
+  },55);
+}
+
+function demoReset(){
+  clearInterval(S.demoIv); clearInterval(S.cdTimer); clearInterval(S.psTimer);
+  S.phase='OPEN'; S.cur=0; S.demoRun=false; S.selBulk=null; S.winTicket=null; S.winName=null;
+  document.getElementById('cd-modal').classList.remove('open');
+  document.getElementById('rl-modal').classList.remove('open');
+  document.getElementById('ef-modal').classList.remove('open');
+  document.getElementById('payout-admin').classList.remove('open');
+  document.getElementById('payout-toggle').textContent='🔒 Reveal Payout Details (Organizer Only)';
+  document.getElementById('payout-toggle').classList.remove('revealed');
+  document.getElementById('closed-box').classList.remove('show');
+  const pc=document.getElementById('purchase-card');
+  pc.style.opacity='1'; pc.style.pointerEvents='auto';
+  document.getElementById('pbtn').disabled=false;
+  const btn=document.getElementById('dfill');
+  btn.textContent='▶ Auto-fill Entries'; btn.classList.remove('act');
+  renderBulk(); renderUI(); syncInd();
+  toast('Draw reset! Ready for next round.',2000);
+}
+
+init();
+</script>
+</body>
+</html>
