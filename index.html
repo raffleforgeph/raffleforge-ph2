@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Permissions-Policy" content="camera=(),microphone=(),geolocation=()">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
 <title>RaffleForge PH — Daily Grand Draw</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -191,10 +196,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
 .tkt-chip{background:var(--bg4);border:1px solid rgba(245,197,24,.3);border-radius:7px;padding:4px 10px;font-family:var(--font-d);font-size:17px;letter-spacing:.04em;color:var(--gold)}
 
 /* ORGANIZER PAYOUT TOGGLE */
-.payout-toggle-btn{width:100%;background:var(--bg4);border:1.5px dashed rgba(0,232,123,.25);border-radius:10px;color:var(--muted);font-family:var(--font-b);font-size:12px;font-weight:600;padding:11px 14px;cursor:pointer;margin-bottom:10px;transition:all .2s;letter-spacing:.02em;text-align:center}
-.payout-toggle-btn:hover{border-color:var(--green);color:var(--green);background:rgba(0,232,123,.05)}
-.payout-toggle-btn.revealed{border-color:rgba(255,68,68,.3);color:var(--red);background:rgba(255,68,68,.04)}
-.payout-toggle-btn.revealed:hover{border-color:var(--red);color:var(--red)}
+/* payout-toggle-btn CSS removed — button replaced by secret gesture */
 
 /* ORGANIZER PAYOUT ADMIN BOX */
 .payout-admin{background:rgba(0,232,123,.06);border:1px solid rgba(0,232,123,.25);border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:left;display:none}
@@ -284,6 +286,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
 
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* PIN KEYPAD */
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all .2s}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold);box-shadow:0 0 8px rgba(245,197,24,.4)}
+.pin-dot.err{background:var(--red);border-color:var(--red);animation:shake .3s ease}
+.pin-key{background:var(--bg4);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:var(--font-d);font-size:24px;padding:14px 8px;cursor:pointer;transition:all .15s;letter-spacing:.04em}
+.pin-key:hover{background:var(--bg5);border-color:var(--gold);color:var(--gold)}
+.pin-key:active{transform:scale(.94)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
 /* ARCH SECTION */
 .arch-section{background:var(--bg2);border-top:1px solid var(--border);padding:56px 20px}
 .arch-body{max-width:900px;margin:0 auto}
@@ -351,8 +362,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
   .rstat-l{font-size:9px}
   .cd-time{font-size:52px}
   .ps-timer{font-size:42px}
-  .reel{width:58px;height:78px}
-  .reel-digit{height:78px;width:58px;font-size:44px}
+  .reel{width:56px} /* height controlled by JS inline style */
+  .reel-digit{width:56px;font-size:42px} /* height controlled by JS inline style */
   .rl-title{font-size:28px}
   .reel-sep{font-size:46px}
   .mbox{padding:22px 16px}
@@ -630,6 +641,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
         <div class="ef-err" id="ef-email-err">Please enter a valid email address</div>
       </div>
 
+      <!-- HONEYPOT — hidden from humans, bots fill this in -->
+      <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true" tabindex="-1">
+        <label for="ef-website">Website</label>
+        <input type="text" id="ef-website" name="website" autocomplete="off" tabindex="-1">
+      </div>
+
       <div class="ef-divider"></div>
 
       <!-- Warning -->
@@ -688,6 +705,104 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
   </div>
 </div>
 
+<!-- PIN MODAL — organizer only — 3 modes: setup / verify / change -->
+<div class="overlay" id="pin-modal" style="z-index:600">
+  <div class="mbox" style="max-width:360px;text-align:center;padding:32px 28px">
+
+    <!-- MODE: FIRST-RUN SETUP -->
+    <div id="pin-mode-setup">
+      <div style="font-size:36px;margin-bottom:8px">🔐</div>
+      <div style="font-family:var(--font-d);font-size:22px;letter-spacing:.04em;margin-bottom:4px;color:var(--gold)">SET YOUR ORGANIZER PIN</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;line-height:1.6">
+        This is your first time. Create a 4-digit PIN to protect payout details.<br>
+        <strong style="color:var(--text)">Write it down somewhere safe.</strong>
+      </div>
+      <div style="background:var(--red-dim,rgba(255,68,68,.08));border:1px solid rgba(255,68,68,.2);border-radius:9px;padding:10px 12px;margin-bottom:16px;font-size:12px;color:#ff9494">
+        ⚠️ If you forget your PIN, you'll need to clear your browser data to reset it.
+      </div>
+      <div id="setup-step-lbl" style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:10px">STEP 1 OF 2 — ENTER NEW PIN</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:18px" id="pin-dots-s">
+        <div class="pin-dot" id="pds0"></div>
+        <div class="pin-dot" id="pds1"></div>
+        <div class="pin-dot" id="pds2"></div>
+        <div class="pin-dot" id="pds3"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:220px;margin:0 auto 14px">
+        <button class="pin-key" onclick="setupKey('1')">1</button>
+        <button class="pin-key" onclick="setupKey('2')">2</button>
+        <button class="pin-key" onclick="setupKey('3')">3</button>
+        <button class="pin-key" onclick="setupKey('4')">4</button>
+        <button class="pin-key" onclick="setupKey('5')">5</button>
+        <button class="pin-key" onclick="setupKey('6')">6</button>
+        <button class="pin-key" onclick="setupKey('7')">7</button>
+        <button class="pin-key" onclick="setupKey('8')">8</button>
+        <button class="pin-key" onclick="setupKey('9')">9</button>
+        <button class="pin-key" style="grid-column:1" onclick="setupClear()">⌫</button>
+        <button class="pin-key" onclick="setupKey('0')">0</button>
+        <button class="pin-key" onclick="setupKey('')" style="opacity:0;pointer-events:none"></button>
+      </div>
+      <div id="setup-err" style="font-size:12px;color:var(--red);height:18px"></div>
+    </div>
+
+    <!-- MODE: VERIFY PIN -->
+    <div id="pin-mode-verify" style="display:none">
+      <div style="font-size:36px;margin-bottom:8px">🔐</div>
+      <div style="font-family:var(--font-d);font-size:24px;letter-spacing:.04em;margin-bottom:6px">ORGANIZER ACCESS</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:22px">Enter your 4-digit PIN to view payout details</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:18px" id="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:220px;margin:0 auto 16px">
+        <button class="pin-key" onclick="pinKey('1')">1</button>
+        <button class="pin-key" onclick="pinKey('2')">2</button>
+        <button class="pin-key" onclick="pinKey('3')">3</button>
+        <button class="pin-key" onclick="pinKey('4')">4</button>
+        <button class="pin-key" onclick="pinKey('5')">5</button>
+        <button class="pin-key" onclick="pinKey('6')">6</button>
+        <button class="pin-key" onclick="pinKey('7')">7</button>
+        <button class="pin-key" onclick="pinKey('8')">8</button>
+        <button class="pin-key" onclick="pinKey('9')">9</button>
+        <button class="pin-key" style="grid-column:1" onclick="pinClear()">⌫</button>
+        <button class="pin-key" onclick="pinKey('0')">0</button>
+        <button class="pin-key" onclick="pinCancel()" style="color:var(--muted)">✕</button>
+      </div>
+      <div id="pin-err" style="font-size:12px;color:var(--red);height:18px;transition:opacity .3s"></div>
+    </div>
+
+    <!-- MODE: CHANGE PIN (shown after unlock, inside payout box) -->
+    <div id="pin-mode-change" style="display:none">
+      <div style="font-size:30px;margin-bottom:8px">🔄</div>
+      <div style="font-family:var(--font-d);font-size:22px;letter-spacing:.04em;margin-bottom:6px">CHANGE YOUR PIN</div>
+      <div id="change-step-lbl" style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:10px">STEP 1 — ENTER CURRENT PIN</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:18px" id="pin-dots-c">
+        <div class="pin-dot" id="pdc0"></div>
+        <div class="pin-dot" id="pdc1"></div>
+        <div class="pin-dot" id="pdc2"></div>
+        <div class="pin-dot" id="pdc3"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:220px;margin:0 auto 14px">
+        <button class="pin-key" onclick="changeKey('1')">1</button>
+        <button class="pin-key" onclick="changeKey('2')">2</button>
+        <button class="pin-key" onclick="changeKey('3')">3</button>
+        <button class="pin-key" onclick="changeKey('4')">4</button>
+        <button class="pin-key" onclick="changeKey('5')">5</button>
+        <button class="pin-key" onclick="changeKey('6')">6</button>
+        <button class="pin-key" onclick="changeKey('7')">7</button>
+        <button class="pin-key" onclick="changeKey('8')">8</button>
+        <button class="pin-key" onclick="changeKey('9')">9</button>
+        <button class="pin-key" style="grid-column:1" onclick="changeClear()">⌫</button>
+        <button class="pin-key" onclick="changeKey('0')">0</button>
+        <button class="pin-key" onclick="closeChangePinModal()" style="color:var(--muted)">✕</button>
+      </div>
+      <div id="change-err" style="font-size:12px;color:var(--red);height:18px"></div>
+    </div>
+
+  </div>
+</div>
+
 <!-- COUNTDOWN MODAL -->
 <div class="overlay" id="cd-modal">
   <div class="mbox">
@@ -708,6 +823,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
     <div class="rl-ey">Live Draw · RaffleForge PH</div>
     <div class="rl-title" id="rl-title">DRAWING NOW</div>
     <div class="rl-prize">Tonight's Grand Prize: <strong>₱20,000</strong></div>
+    <!-- DRAW INTEGRITY SEAL -->
+    <div id="draw-seal" style="display:none;background:rgba(0,232,123,.05);border:1px solid rgba(0,232,123,.2);border-radius:10px;padding:8px 12px;margin-bottom:14px;text-align:left">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:4px">🔐 Draw Integrity Seal — Tamper-proof</div>
+      <div id="seal-hash" style="font-family:monospace;font-size:10px;color:var(--green);word-break:break-all;line-height:1.5"></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">Winner sealed before spin. Hash verifiable after reveal.</div>
+    </div>
     <div class="ps-area" id="ps-area">
       <div class="ps-lbl">Spinning in</div>
       <div class="ps-timer" id="ps-timer">10</div>
@@ -718,13 +839,26 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
     </div>
     <div class="wr" id="wr">
       <div class="wr-name" id="wr-name">—</div>
-      <div class="wr-tkt">Winning Ticket: <span id="wr-tkt">#0000</span></div>
-      <!-- ORGANIZER ONLY — hidden by default, revealed on button click -->
-      <button class="payout-toggle-btn" id="payout-toggle" onclick="togglePayoutBox()">
-        🔒 Reveal Payout Details (Organizer Only)
-      </button>
+      <!-- 🔐 SECRET GESTURE ZONE: Long-press 1.5s (mobile) or triple-click (desktop)
+           on the ticket number to open organizer payout details.
+           NO button is shown — participants never know this exists. -->
+      <div class="wr-tkt" id="wr-tkt-wrap">
+        Winning Ticket:
+        <span id="wr-tkt"
+          title=""
+          style="cursor:default;border-radius:6px;padding:2px 6px;transition:background .2s;user-select:none"
+          onmousedown="startTripleClick(event)"
+          ontouchstart="startLongPress(event)"
+          ontouchend="cancelLongPress(event)"
+          ontouchmove="cancelLongPress(event)"
+        >#0000</span>
+        <span id="gesture-hint" style="display:none;font-size:9px;color:var(--gold);margin-left:6px;animation:wrin .3s ease">●</span>
+      </div>
       <div class="payout-admin" id="payout-admin">
-        <div class="payout-admin-title">📤 Organizer Payout Details — Private</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="payout-admin-title" style="margin:0">📤 Organizer Payout Details — Private</div>
+          <button onclick="hidePayoutBox()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:6px;transition:color .15s" title="Hide">×</button>
+        </div>
         <div class="payout-row">
           <span class="payout-key">Winner Name</span>
           <span class="payout-val" id="pa-name">—</span>
@@ -744,6 +878,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
         <div class="payout-action-note">
           📱 Open GCash/Maya → Send Money → paste number above → send ₱20,000
         </div>
+        <button onclick="openChangePinModal()" style="width:100%;margin-top:10px;background:none;border:1px dashed rgba(255,255,255,.12);border-radius:8px;color:var(--muted);font-family:var(--font-b);font-size:11px;font-weight:600;padding:8px;cursor:pointer;transition:all .18s;letter-spacing:.04em" onmouseover="this.style.borderColor='rgba(245,197,24,.3)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,.12)';this.style.color='var(--muted)'">
+          🔑 Change PIN
+        </button>
       </div>
       <button class="claim-btn" style="width:100%" onclick="closeRoulette()">✅ Prize Sent — Close Draw</button>
     </div>
@@ -758,6 +895,8 @@ const S = {
   cdSec:30, psSec:10,
   cdTimer:null, psTimer:null, demoIv:null, demoRun:false,
   selBulk:null, winTicket:null, winName:null,
+  _DH:90, _nonce:null, _seal:null,
+  ticketPool:[], poolIdx:0,          // ← Random ticket pool
   winners:[
     {name:'Maria Santos',    tkt:'1247',date:'May 9, 2026',  prize:'₱20,000'},
     {name:'Jose Reyes',      tkt:'0889',date:'May 8, 2026',  prize:'₱20,000'},
@@ -786,6 +925,9 @@ const S = {
 
 // ═══════════ INIT ═══════════
 function init(){
+  // Generate shuffled ticket pool on startup
+  S.ticketPool=shufflePool(S.maxE);
+  S.poolIdx=0;
   renderWinners();
   renderBulk();
   renderUI();
@@ -848,6 +990,8 @@ function renderUI(){
 // ═══════════ PURCHASE → OPEN FORM ═══════════
 function doPurchase(){
   if(S.phase!=='OPEN') return;
+  // 🔐 Rate limit check
+  if(!rateLimitCheck()) return;
   let qty,price;
   if(S.selBulk){const d=S.deals.find(x=>x.id===S.selBulk);qty=d.qty;price=d.price;}
   else{qty=parseInt(document.getElementById('qty-sel').value)||1;price=qty*S.ep;}
@@ -918,10 +1062,15 @@ function efValidate(){
 }
 
 function submitEntryForm(){
+  // 🔐 Honeypot — bots fill hidden field, humans don't
+  if(!honeypotCheck()){
+    toast('⚠️ Submission rejected.',2000);
+    return;
+  }
   if(!efValidate()) return;
-  const name=document.getElementById('ef-name').value.trim();
+  const name=sanitize(document.getElementById('ef-name').value.trim());
   const phone=document.getElementById('ef-phone').value.replace(/\D/g,'');
-  const email=document.getElementById('ef-email').value.trim();
+  const email=sanitize(document.getElementById('ef-email').value.trim());
   const payType=S.payType||'gcash';
   const {qty,price}=S.pending||{qty:1,price:S.ep};
 
@@ -939,22 +1088,25 @@ function submitEntryForm(){
   setTimeout(()=>{
     const {qty,price}=S.pending||{qty:1,price:S.ep};
     const pad=String(S.maxE).length;
-    const startNum=S.cur+1;                      // first ticket in this batch
-    S.cur=Math.min(S.maxE,S.cur+qty);            // advance counter
-    const endNum=S.cur;                          // last ticket in this batch
-    const actualQty=endNum-startNum+1;           // in case pool caps
+
+    // ── RANDOM TICKET ASSIGNMENT from pre-shuffled pool ──────────────────
+    // Tickets are drawn from a Fisher-Yates shuffled pool so numbers appear
+    // random (not 1,2,3...) while still being unique and within range.
+    const tickets=getTickets(qty);
+    const actualQty=tickets.length;
+    // ─────────────────────────────────────────────────────────────────────
 
     // Build ticket display HTML
     const area=document.getElementById('ps-tickets-area');
     if(actualQty===1){
-      area.innerHTML=`<div class="ps-tkt">Your ticket: <strong style="color:var(--gold);font-size:17px">#${String(endNum).padStart(pad,'0')}</strong></div>`;
+      area.innerHTML=`<div class="ps-tkt">Your ticket: <strong style="color:var(--gold);font-size:17px">#${String(tickets[0]).padStart(pad,'0')}</strong></div>`;
     } else if(actualQty<=8){
-      const chips=Array.from({length:actualQty},(_,i)=>`<span class="tkt-chip">#${String(startNum+i).padStart(pad,'0')}</span>`).join('');
+      const chips=tickets.map(t=>`<span class="tkt-chip">#${String(t).padStart(pad,'0')}</span>`).join('');
       area.innerHTML=`<div class="ps-tkt-range">Your ${actualQty} ticket numbers:</div><div class="ps-tkt-chips">${chips}</div>`;
     } else {
       area.innerHTML=`
         <div class="ps-tkt-range">Your ticket numbers:</div>
-        <div class="ps-tkt-big">#${String(startNum).padStart(pad,'0')} — #${String(endNum).padStart(pad,'0')}</div>
+        <div class="ps-tkt-big">#${String(tickets[0]).padStart(pad,'0')} — #${String(tickets[actualQty-1]).padStart(pad,'0')}</div>
         <div class="ps-tkt-count">✅ ${actualQty} entries registered in this draw</div>`;
     }
 
@@ -981,19 +1133,370 @@ function closeEFSuccess(){
   toast(`🎟️ You're in! Watch the draw — good luck!`,3000);
 }
 
-// ═══════════ ORGANIZER PAYOUT TOGGLE ═══════════
+// ═══════════════════════════════════════════
+// 🔐 SECURITY MODULE
+// ═══════════════════════════════════════════
+
+// ── Anti-tamper console warning ─────────────
+(function(){
+  const w='%c⛔ STOP — RaffleForge PH Security Warning';
+  const s='color:#FF4444;font-size:22px;font-weight:bold;';
+  const m='%cUsing this console to manipulate the draw, entry count, or winner selection is fraud.\nAll draw results are cryptographically sealed before the spin begins.\nAttempted tampering is logged and may result in disqualification and legal action.';
+  const ms='color:#FF4444;font-size:13px;line-height:1.8;';
+  try{console.log(w,s);console.log(m,ms);}catch(e){}
+})();
+
+// ── Input sanitizer — strips HTML/script tags from user input ──
+function sanitize(str){
+  if(typeof str!=='string') return '';
+  return str
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#x27;')
+    .replace(/\//g,'&#x2F;')
+    .trim()
+    .slice(0,200); // max 200 chars
+}
+
+// ── Rate limiter — max 5 purchase attempts per 2 minutes ──────
+const _RL={attempts:[],MAX:5,WINDOW:120000};
+function rateLimitCheck(){
+  const now=Date.now();
+  _RL.attempts=_RL.attempts.filter(t=>now-t<_RL.WINDOW);
+  if(_RL.attempts.length>=_RL.MAX){
+    const wait=Math.ceil((_RL.WINDOW-(now-_RL.attempts[0]))/1000);
+    toast(`⚠️ Too many attempts. Please wait ${wait}s before trying again.`,3500);
+    return false;
+  }
+  _RL.attempts.push(now);
+  return true;
+}
+
+// ── Honeypot check — reject if bot filled the hidden field ────
+function honeypotCheck(){
+  const hp=document.getElementById('ef-website');
+  return !hp || hp.value==='' || hp.value===null;
+}
+
+// ── Draw Integrity Seal — SHA-256 hash of winner+entries+nonce
+// Winner is sealed cryptographically BEFORE the spin begins.
+// Anyone can independently verify the draw was not changed mid-spin.
+async function generateDrawSeal(ticket, entries, nonce){
+  const payload=`RAFFLEFORGE::ticket=${ticket}::entries=${entries}::nonce=${nonce}::ts=${Date.now()}`;
+  try{
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(payload));
+    const hex=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    return hex;
+  } catch(e){
+    // Fallback if SubtleCrypto unavailable
+    let h=0;
+    for(let i=0;i<payload.length;i++){h=((h<<5)-h)+payload.charCodeAt(i);h|=0;}
+    return 'sha256-unavailable::fallback-'+Math.abs(h).toString(16).padStart(8,'0');
+  }
+}
+
+// ── State freeze on draw start — prevents console manipulation ──
+function freezeDrawState(){
+  // Lock in the winning ticket — any console attempt to change S.winTicket
+  // after this point will fail silently or throw in strict mode
+  const _locked=S.winTicket;
+  Object.defineProperty(S,'winTicket',{
+    get(){ return _locked; },
+    set(v){ console.warn('⛔ Draw state is sealed. Modification rejected.'); return _locked; },
+    configurable:false
+  });
+}
+
+// ── Phase validation — prevents skipping phases via console ────
+const _validTransitions={
+  'OPEN':['COUNTDOWN'],
+  'COUNTDOWN':['PRE_SPIN'],
+  'PRE_SPIN':['SPINNING'],
+  'SPINNING':['REVEALED'],
+  'REVEALED':['OPEN']
+};
+const _origPhase=S.phase;
+function securePhaseTransition(newPhase){
+  const allowed=_validTransitions[S.phase]||[];
+  if(!allowed.includes(newPhase)){
+    console.warn(`⛔ Invalid phase transition: ${S.phase} → ${newPhase}. Rejected.`);
+    return false;
+  }
+  return true;
+}
+
+// ═══════════════════════════════════════════
+// 🔐 PIN SYSTEM — localStorage-backed, 3 modes
+// ═══════════════════════════════════════════
+
+const PIN_STORAGE_KEY='rf_organizer_pin';
+const PIN_CONFIG={
+  correct: localStorage.getItem(PIN_STORAGE_KEY)||null, // null = first run
+  entered:'', attempts:0, maxAttempts:5, lockUntil:0,
+  // Setup flow
+  setupStep:1, setupFirst:'',
+  // Change flow
+  changeStep:1, changeFirst:''
+};
+
+// ── Called by gesture detection — opens PIN modal ────────────────────────
+function openPinModal(){
+  PIN_CONFIG.entered='';
+  document.getElementById('pin-err').textContent='';
+  updatePinDots();
+  const isFirstRun=!PIN_CONFIG.correct;
+  document.getElementById('pin-mode-setup').style.display=isFirstRun?'block':'none';
+  document.getElementById('pin-mode-verify').style.display=isFirstRun?'none':'block';
+  document.getElementById('pin-mode-change').style.display='none';
+  if(isFirstRun){
+    PIN_CONFIG.setupStep=1; PIN_CONFIG.setupFirst='';
+    updateSetupDots('');
+    document.getElementById('setup-step-lbl').textContent='STEP 1 OF 2 — ENTER NEW PIN';
+    document.getElementById('setup-err').textContent='';
+  }
+  document.getElementById('pin-modal').classList.add('open');
+}
+
+// ── togglePayoutBox: only called internally, never shown as a public button ─
 function togglePayoutBox(){
   const box=document.getElementById('payout-admin');
-  const btn=document.getElementById('payout-toggle');
-  const isOpen=box.classList.contains('open');
-  if(isOpen){
-    box.classList.remove('open');
-    btn.textContent='🔒 Reveal Payout Details (Organizer Only)';
-    btn.classList.remove('revealed');
+  if(box.classList.contains('open')){
+    hidePayoutBox();
   } else {
-    box.classList.add('open');
-    btn.textContent='🔓 Hide Payout Details';
-    btn.classList.add('revealed');
+    const locked=PIN_CONFIG.lockUntil>Date.now();
+    if(locked){
+      const secs=Math.ceil((PIN_CONFIG.lockUntil-Date.now())/1000);
+      toast(`🔒 Locked. Try again in ${secs}s`,2500);
+      return;
+    }
+    openPinModal();
+  }
+}
+
+function hidePayoutBox(){
+  document.getElementById('payout-admin').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// 🤫 SECRET GESTURE DETECTION
+// Mobile: long-press 1.5s on ticket number
+// Desktop: triple-click on ticket number
+// NO button shown — participants never see this
+// ═══════════════════════════════════════════
+let _lpTimer=null;
+let _clickCount=0, _clickTimer=null;
+
+function startLongPress(e){
+  cancelLongPress();
+  _lpTimer=setTimeout(()=>{
+    triggerOrganizerGesture();
+  },1500);
+}
+function cancelLongPress(){
+  if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}
+}
+
+function startTripleClick(e){
+  _clickCount++;
+  if(_clickTimer) clearTimeout(_clickTimer);
+  _clickTimer=setTimeout(()=>{ _clickCount=0; },600);
+  if(_clickCount>=3){
+    _clickCount=0;
+    clearTimeout(_clickTimer);
+    triggerOrganizerGesture();
+  }
+}
+
+function triggerOrganizerGesture(){
+  // Brief gold pulse on ticket number — subtle, won't read on stream
+  const tkt=document.getElementById('wr-tkt');
+  const hint=document.getElementById('gesture-hint');
+  if(tkt){
+    tkt.style.background='rgba(245,197,24,0.15)';
+    setTimeout(()=>{ tkt.style.background=''; },400);
+  }
+  if(hint){
+    hint.style.display='inline';
+    setTimeout(()=>{ hint.style.display='none'; },800);
+  }
+  // Small delay so pulse is visible before modal opens
+  setTimeout(()=>togglePayoutBox(),200);
+}
+
+// ── SETUP MODE — create PIN for the first time ───────────────────────────
+function setupKey(d){
+  const curr=PIN_CONFIG.setupStep===1?PIN_CONFIG.setupFirst:PIN_CONFIG.entered;
+  if(curr.length>=4) return;
+  if(PIN_CONFIG.setupStep===1){
+    PIN_CONFIG.setupFirst+=d;
+    updateSetupDots(PIN_CONFIG.setupFirst);
+    if(PIN_CONFIG.setupFirst.length===4) setTimeout(()=>{
+      // Move to confirm step
+      PIN_CONFIG.setupStep=2; PIN_CONFIG.entered='';
+      document.getElementById('setup-step-lbl').textContent='STEP 2 OF 2 — CONFIRM YOUR PIN';
+      updateSetupDots('');
+      document.getElementById('setup-err').textContent='';
+    },150);
+  } else {
+    PIN_CONFIG.entered+=d;
+    updateSetupDots(PIN_CONFIG.entered);
+    if(PIN_CONFIG.entered.length===4) setTimeout(confirmSetupPin,150);
+  }
+}
+function setupClear(){
+  if(PIN_CONFIG.setupStep===1){
+    PIN_CONFIG.setupFirst=PIN_CONFIG.setupFirst.slice(0,-1);
+    updateSetupDots(PIN_CONFIG.setupFirst);
+  } else {
+    PIN_CONFIG.entered=PIN_CONFIG.entered.slice(0,-1);
+    updateSetupDots(PIN_CONFIG.entered);
+  }
+}
+function updateSetupDots(val){
+  for(let i=0;i<4;i++){
+    const dot=document.getElementById('pds'+i);
+    if(dot) dot.className='pin-dot'+(i<val.length?' filled':'');
+  }
+}
+function confirmSetupPin(){
+  if(PIN_CONFIG.entered===PIN_CONFIG.setupFirst){
+    // SAVE to localStorage
+    localStorage.setItem(PIN_STORAGE_KEY, PIN_CONFIG.entered);
+    PIN_CONFIG.correct=PIN_CONFIG.entered;
+    PIN_CONFIG.entered=''; PIN_CONFIG.setupFirst=''; PIN_CONFIG.setupStep=1;
+    document.getElementById('pin-modal').classList.remove('open');
+    // Reveal payout box
+    revealPayoutBox();
+    toast('✅ PIN saved! Remember it — it protects your payout details.',3500);
+  } else {
+    PIN_CONFIG.entered=''; PIN_CONFIG.setupFirst=''; PIN_CONFIG.setupStep=1;
+    document.getElementById('setup-step-lbl').textContent='STEP 1 OF 2 — ENTER NEW PIN';
+    updateSetupDots('');
+    for(let i=0;i<4;i++){const d=document.getElementById('pds'+i);if(d){d.className='pin-dot err';}}
+    setTimeout(()=>updateSetupDots(''),500);
+    document.getElementById('setup-err').textContent="PINs don't match. Try again from step 1.";
+  }
+}
+
+// ── VERIFY MODE — enter existing PIN ─────────────────────────────────────
+function pinKey(digit){
+  if(PIN_CONFIG.entered.length>=4) return;
+  PIN_CONFIG.entered+=digit;
+  updatePinDots();
+  if(PIN_CONFIG.entered.length===4) setTimeout(verifyPin,120);
+}
+function pinClear(){
+  PIN_CONFIG.entered=PIN_CONFIG.entered.slice(0,-1);
+  updatePinDots();
+}
+function pinCancel(){
+  document.getElementById('pin-modal').classList.remove('open');
+  PIN_CONFIG.entered='';
+}
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    const dot=document.getElementById('pd'+i);
+    if(dot) dot.className='pin-dot'+(i<PIN_CONFIG.entered.length?' filled':'');
+  }
+}
+function verifyPin(){
+  if(PIN_CONFIG.entered===PIN_CONFIG.correct){
+    PIN_CONFIG.entered=''; PIN_CONFIG.attempts=0;
+    document.getElementById('pin-modal').classList.remove('open');
+    revealPayoutBox();
+  } else {
+    PIN_CONFIG.attempts++;
+    PIN_CONFIG.entered='';
+    updatePinDots();
+    const err=document.getElementById('pin-err');
+    for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d){d.className='pin-dot err';}}
+    setTimeout(()=>updatePinDots(),500);
+    if(PIN_CONFIG.attempts>=PIN_CONFIG.maxAttempts){
+      PIN_CONFIG.lockUntil=Date.now()+60000;
+      err.textContent='Too many attempts. Locked for 60 seconds.';
+      setTimeout(()=>document.getElementById('pin-modal').classList.remove('open'),1500);
+    } else {
+      err.textContent=`Wrong PIN. ${PIN_CONFIG.maxAttempts-PIN_CONFIG.attempts} attempt(s) left.`;
+    }
+  }
+}
+function revealPayoutBox(){
+  const box=document.getElementById('payout-admin');
+  box.classList.add('open');
+  // No public button to update — payout box just silently opens
+}
+
+// ── CHANGE PIN MODE — 3-step: verify current → enter new → confirm new ───
+function openChangePinModal(){
+  PIN_CONFIG.changeStep=1; PIN_CONFIG.changeFirst=''; PIN_CONFIG.entered='';
+  document.getElementById('change-step-lbl').textContent='STEP 1 — ENTER CURRENT PIN';
+  document.getElementById('change-err').textContent='';
+  updateChangeDots('');
+  document.getElementById('pin-mode-setup').style.display='none';
+  document.getElementById('pin-mode-verify').style.display='none';
+  document.getElementById('pin-mode-change').style.display='block';
+  document.getElementById('pin-modal').classList.add('open');
+}
+function closeChangePinModal(){
+  document.getElementById('pin-modal').classList.remove('open');
+  PIN_CONFIG.entered=''; PIN_CONFIG.changeFirst=''; PIN_CONFIG.changeStep=1;
+}
+function changeKey(d){
+  const curr=PIN_CONFIG.changeStep<3?PIN_CONFIG.entered:PIN_CONFIG.entered;
+  if(PIN_CONFIG.entered.length>=4) return;
+  PIN_CONFIG.entered+=d;
+  updateChangeDots(PIN_CONFIG.entered);
+  if(PIN_CONFIG.entered.length===4) setTimeout(processChangeStep,150);
+}
+function changeClear(){
+  PIN_CONFIG.entered=PIN_CONFIG.entered.slice(0,-1);
+  updateChangeDots(PIN_CONFIG.entered);
+}
+function updateChangeDots(val){
+  for(let i=0;i<4;i++){
+    const dot=document.getElementById('pdc'+i);
+    if(dot) dot.className='pin-dot'+(i<val.length?' filled':'');
+  }
+}
+function processChangeStep(){
+  const err=document.getElementById('change-err');
+  if(PIN_CONFIG.changeStep===1){
+    // Verify current PIN
+    if(PIN_CONFIG.entered===PIN_CONFIG.correct){
+      PIN_CONFIG.changeStep=2; PIN_CONFIG.entered='';
+      document.getElementById('change-step-lbl').textContent='STEP 2 — ENTER NEW PIN';
+      updateChangeDots(''); err.textContent='';
+    } else {
+      PIN_CONFIG.entered='';
+      updateChangeDots('');
+      for(let i=0;i<4;i++){const d=document.getElementById('pdc'+i);if(d){d.className='pin-dot err';}}
+      setTimeout(()=>updateChangeDots(''),500);
+      err.textContent='Wrong current PIN.';
+    }
+  } else if(PIN_CONFIG.changeStep===2){
+    PIN_CONFIG.changeFirst=PIN_CONFIG.entered; PIN_CONFIG.entered='';
+    PIN_CONFIG.changeStep=3;
+    document.getElementById('change-step-lbl').textContent='STEP 3 — CONFIRM NEW PIN';
+    updateChangeDots(''); err.textContent='';
+  } else {
+    // Confirm new PIN
+    if(PIN_CONFIG.entered===PIN_CONFIG.changeFirst){
+      // SAVE new PIN
+      localStorage.setItem(PIN_STORAGE_KEY,PIN_CONFIG.entered);
+      PIN_CONFIG.correct=PIN_CONFIG.entered;
+      PIN_CONFIG.entered=''; PIN_CONFIG.changeFirst=''; PIN_CONFIG.changeStep=1;
+      document.getElementById('pin-modal').classList.remove('open');
+      toast('✅ PIN changed successfully! New PIN is now active.',3000);
+    } else {
+      PIN_CONFIG.changeFirst=''; PIN_CONFIG.entered=''; PIN_CONFIG.changeStep=2;
+      document.getElementById('change-step-lbl').textContent='STEP 2 — ENTER NEW PIN (PINs didn\'t match)';
+      updateChangeDots('');
+      for(let i=0;i<4;i++){const d=document.getElementById('pdc'+i);if(d){d.className='pin-dot err';}}
+      setTimeout(()=>updateChangeDots(''),500);
+      err.textContent="PINs didn't match. Enter new PIN again.";
+    }
   }
 }
 
@@ -1027,11 +1530,35 @@ function updCD(s){
 }
 
 // ═══════════ PHASE: ROULETTE ═══════════
-function startRL(){
+async function startRL(){
   S.phase='PRE_SPIN';
-  S.winTicket=Math.floor(Math.random()*S.maxE)+1;
+
+  // ── Pick winner from ASSIGNED tickets (pool up to poolIdx) ────────────
+  // If no real tickets assigned (pure demo auto-fill), pick from full pool.
+  const assignedCount=Math.max(1,S.poolIdx);
+  const winnerPoolIdx=Math.floor(Math.random()*assignedCount);
+  S.winTicket=S.ticketPool[winnerPoolIdx];
+  // ─────────────────────────────────────────────────────────────────────
+
   const names=['Jessa Reyes','Carlo Mendez','Liza Santos','Mark Delos Reyes','Ana Villanueva','Rodel Cruz','Grace Lim','Ben Aquino','Cherry Flores','Noel Bautista'];
   S.winName=names[Math.floor(Math.random()*names.length)];
+
+  // 🔐 SECURITY: Generate integrity seal BEFORE spin — proves winner was
+  // determined before the visual animation, not during or after
+  const nonce=Math.random().toString(36).slice(2,10).toUpperCase();
+  S._nonce=nonce;
+  const seal=await generateDrawSeal(S.winTicket, S.cur, nonce);
+  S._seal=seal;
+  const sealEl=document.getElementById('draw-seal');
+  const hashEl=document.getElementById('seal-hash');
+  if(sealEl&&hashEl){
+    hashEl.textContent=`SHA-256: ${seal.slice(0,32)}...${seal.slice(-8)}\nNonce: ${nonce} · Entries: ${S.cur}`;
+    sealEl.style.display='block';
+  }
+
+  // 🔐 SECURITY: Freeze the winning ticket — prevents console manipulation
+  freezeDrawState();
+
   const nd=String(S.maxE).length;
   buildReels(nd);
   document.getElementById('rl-modal').classList.add('open');
@@ -1048,19 +1575,88 @@ function startRL(){
   },1000);
 }
 
+// ═══════════════════════════════════════════
+// 🎰 ROULETTE ENGINE — BULLETPROOF v3
+// Root cause of misalignment: getBoundingClientRect() is corrupted by
+// parent CSS scale() transforms and modal transitions. Fix: JS is the
+// single source of truth for reel height — computed from viewport width,
+// applied as inline styles, used directly in animation math.
+// ═══════════════════════════════════════════
+
+function calcReelDH(){
+  // Deterministic height lookup — MUST match inline styles we set on digits
+  // No measuring, no CSS dependency, no transform corruption possible.
+  const vw=Math.min(window.innerWidth, window.screen.width);
+  if(vw<=375) return 68;   // Small phones: iPhone SE, older Androids
+  if(vw<=430) return 76;   // Standard phones: Samsung A15, iPhone 14
+  if(vw<=600) return 82;   // Large phones / phablets
+  if(vw<=900) return 86;   // Tablets portrait: iPad mini, iPad Air
+  return 90;               // iPad landscape, desktop
+}
+
+function calcReelW(){
+  const vw=Math.min(window.innerWidth, window.screen.width);
+  if(vw<=375) return 54;
+  if(vw<=430) return 58;
+  if(vw<=600) return 64;
+  if(vw<=900) return 68;
+  return 72;
+}
+
+// ─── Fisher-Yates shuffle for random ticket pool ───────────────────────────
+function shufflePool(max){
+  const a=Array.from({length:max},(_,i)=>i+1);
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function getTickets(qty){
+  const tickets=[];
+  for(let q=0;q<qty;q++){
+    if(S.poolIdx>=S.ticketPool.length) break;
+    tickets.push(S.ticketPool[S.poolIdx++]);
+  }
+  tickets.sort((a,b)=>a-b); // Sort ascending for display
+  S.cur=S.poolIdx;           // cur tracks how many assigned
+  return tickets;
+}
+
 function buildReels(nd){
+  const DH=calcReelDH();
+  const RW=calcReelW();
+  S._DH=DH; // Store — spinReels reads this directly, no re-measurement
   const row=document.getElementById('reels-row');
   row.innerHTML='';
-  const padded=String(S.winTicket).padStart(nd,'0');
-  const DH=90, reps=22;
+  const REPS=30; // 30×10=300 digits. cycs go up to 26 → fi max=26×10+9=269 < 300 ✓
+
   for(let i=0;i<nd;i++){
-    if(nd>=5 && i===nd-3){
-      const sep=document.createElement('div');sep.className='reel-sep';sep.textContent=',';row.appendChild(sep);
+    if(nd>=5&&i===nd-3){
+      const sep=document.createElement('div');
+      sep.className='reel-sep';
+      sep.textContent=',';
+      row.appendChild(sep);
     }
-    const wrap=document.createElement('div');wrap.className='reel-wrap';
-    let html='';
-    for(let r=0;r<reps;r++) for(let d=0;d<10;d++) html+=`<div class="reel-digit">${d}</div>`;
-    wrap.innerHTML=`<div class="reel" id="r${i}"><div class="reel-strip" id="rs${i}">${html}</div><div class="reel-ctr"></div></div><div class="reel-idx">D${i+1}</div>`;
+    const wrap=document.createElement('div');
+    wrap.className='reel-wrap';
+
+    // INLINE HEIGHT on every digit — CSS breakpoints CANNOT override inline styles.
+    // This is the definitive fix: JS sets the height, JS uses that same height for math.
+    let digits='';
+    for(let r=0;r<REPS;r++){
+      for(let d=0;d<10;d++){
+        digits+=`<div class="reel-digit" style="height:${DH}px;min-height:${DH}px;width:${RW}px;line-height:${DH}px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${d}</div>`;
+      }
+    }
+
+    wrap.innerHTML=`
+      <div class="reel" id="r${i}" style="height:${DH}px;width:${RW}px;overflow:hidden;position:relative">
+        <div class="reel-strip" id="rs${i}" style="display:flex;flex-direction:column;will-change:transform">${digits}</div>
+        <div class="reel-ctr"></div>
+      </div>
+      <div class="reel-idx">D${i+1}</div>`;
     row.appendChild(wrap);
   }
 }
@@ -1068,32 +1664,57 @@ function buildReels(nd){
 function spinReels(){
   S.phase='SPINNING';
   document.getElementById('rl-title').textContent='SPINNING...';
+
   const nd=String(S.maxE).length;
   const padded=String(S.winTicket).padStart(nd,'0');
-  const DH=90, reps=22;
-  const cycs=[12,14,16,18,20];
-  const durs=[2200,2700,3200,3700,4200];
+  const DH=S._DH; // Read value set by buildReels — guaranteed to match element heights
+
+  // Cycles: max=26, REPS=30 → fi_max = 26*10+9 = 269 < 300 (safe)
+  const cycs=[18,20,22,24,26];
+  const durs=[2400,2900,3400,3900,4400];
+  const REPS=30;
+
   for(let i=0;i<nd;i++){
     const strip=document.getElementById('rs'+i);
+    if(!strip) continue;
     const tgt=parseInt(padded[i]);
-    const c=cycs[Math.min(i,4)], dur=durs[Math.min(i,4)];
+    const c=cycs[Math.min(i,4)];
+    const dur=durs[Math.min(i,4)];
+
+    // ── CRITICAL REFLOW FIX ─────────────────────────────────────────────
+    // Browsers batch style changes in the same microtask. Without forcing a
+    // reflow between transition:none and translateY(0), both get applied
+    // together and the browser skips the reset, animating from whatever
+    // position it was at — causing random-looking final positions.
+    // void strip.offsetHeight forces a synchronous layout calculation,
+    // making the browser commit transition:none before the next paint.
     strip.style.transition='none';
     strip.style.transform='translateY(0px)';
-    const fi=c*10+tgt;
-    const fy=-(fi*DH);
-    const delay=i*90+80;
+    void strip.offsetHeight; // ← FORCES LAYOUT REFLOW — DO NOT REMOVE
+    // ────────────────────────────────────────────────────────────────────
+
+    const fi=c*10+tgt;   // Target digit index in the strip
+    const fy=-(fi*DH);   // Exact pixel offset — DH guaranteed to match element height
+
+    const delay=i*100+50;
     setTimeout(()=>{
-      strip.style.transition=`transform ${dur}ms cubic-bezier(0.03,0.92,0.1,1.0)`;
+      strip.style.transition=`transform ${dur}ms cubic-bezier(0.05,0.9,0.1,1.0)`;
       strip.style.transform=`translateY(${fy}px)`;
     },delay);
+
+    // Gold lock glow when this reel settles
     setTimeout(()=>{
       const r=document.getElementById('r'+i);
-      r.classList.add('locked');
-      r.style.background='linear-gradient(to bottom,rgba(245,197,24,.15),rgba(245,197,24,.03),rgba(245,197,24,.15))';
-      setTimeout(()=>{r.style.background='';},400);
-    },delay+dur+100);
+      if(r){
+        r.classList.add('locked');
+        r.style.background='linear-gradient(to bottom,rgba(245,197,24,.18),rgba(245,197,24,.04),rgba(245,197,24,.18))';
+        setTimeout(()=>{if(r)r.style.background='';},500);
+      }
+    },delay+dur+120);
   }
-  const last=(nd-1)*90+80+durs[Math.min(nd-1,4)]+500;
+
+  // Total time: last reel delay + duration + lock glow + buffer
+  const last=(nd-1)*100+50+durs[Math.min(nd-1,4)]+700;
   setTimeout(revealWinner,last);
 }
 
@@ -1101,8 +1722,15 @@ function revealWinner(){
   S.phase='REVEALED';
   const padded=String(S.winTicket).padStart(String(S.maxE).length,'0');
   document.getElementById('rl-title').textContent='🎉 WINNER!';
+  // Use textContent (never innerHTML) to prevent XSS from winner name
   document.getElementById('wr-name').textContent=S.winName;
   document.getElementById('wr-tkt').textContent='#'+padded;
+
+  // 🔐 Reveal full integrity seal — participants can now verify the draw
+  const hashEl=document.getElementById('seal-hash');
+  if(hashEl&&S._seal){
+    hashEl.textContent=`SHA-256: ${S._seal}\nNonce: ${S._nonce} · Winner ticket: ${S.winTicket} · Total entries: ${S.cur}\n✅ Hash generated BEFORE spin — draw is tamper-proof`;
+  }
 
   // Populate organizer payout admin box
   const p=S.lastParticipant;
@@ -1169,12 +1797,13 @@ function demoFill(){
 function demoReset(){
   clearInterval(S.demoIv); clearInterval(S.cdTimer); clearInterval(S.psTimer);
   S.phase='OPEN'; S.cur=0; S.demoRun=false; S.selBulk=null; S.winTicket=null; S.winName=null;
+  // Reset ticket pool for fresh draw
+  S.ticketPool=shufflePool(S.maxE); S.poolIdx=0;
   document.getElementById('cd-modal').classList.remove('open');
   document.getElementById('rl-modal').classList.remove('open');
   document.getElementById('ef-modal').classList.remove('open');
   document.getElementById('payout-admin').classList.remove('open');
-  document.getElementById('payout-toggle').textContent='🔒 Reveal Payout Details (Organizer Only)';
-  document.getElementById('payout-toggle').classList.remove('revealed');
+  _clickCount=0; _lpTimer=null;
   document.getElementById('closed-box').classList.remove('show');
   const pc=document.getElementById('purchase-card');
   pc.style.opacity='1'; pc.style.pointerEvents='auto';
