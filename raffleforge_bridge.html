@@ -869,13 +869,30 @@ function genRef(){
 }
 
 // ══════════════════════════════════════════════════════
-// INIT
+// INIT — loads live entry count from Sheet on startup
 // ══════════════════════════════════════════════════════
 function init(){
   S.ticketPool=shufflePool(S.maxE); S.poolIdx=0;
   document.getElementById('prize-disp').textContent='₱'+S.prize.toLocaleString();
   document.getElementById('stat-target').textContent=S.maxE.toLocaleString();
   renderWinners();renderBulk();renderUI();syncInd();
+  // Load live count from Sheet so ring always shows real progress
+  if(BRIDGE.sheets.url) loadLiveCount();
+}
+
+async function loadLiveCount(){
+  try{
+    const url=BRIDGE.sheets.url+'?count=1&t='+Date.now();
+    const resp=await fetch(url);
+    const d=await resp.json();
+    if(d && typeof d.count==='number' && d.count>0){
+      S.cur=Math.min(d.count, S.maxE);
+      S.poolIdx=S.cur;
+      renderUI();
+    }
+  }catch(e){
+    // Silently fail — ring stays at 0 if Sheet unreachable
+  }
 }
 
 // ══════════════════════════════════════════════════════
