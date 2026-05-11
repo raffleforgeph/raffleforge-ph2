@@ -444,30 +444,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px
     <div id="winners-container"></div>
   </div>
 
-  <!-- CHECK MY TICKET NUMBERS -->
-  <div class="card" id="lookup-card">
-    <div class="card-title">🔍 Check My Ticket Numbers</div>
-    <div style="font-size:13px;color:var(--muted2);margin-bottom:14px;line-height:1.6">
-      After your payment is verified, your ticket numbers will appear here. Enter the reference code from your payment confirmation.
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-      <input type="text" id="lookup-ref"
-        placeholder="e.g. RF-20260511-5UKL"
-        style="flex:1;min-width:180px;background:var(--bg4);border:1.5px solid var(--border2);border-radius:11px;color:var(--text);font-family:var(--fb);font-size:14px;padding:12px 14px;outline:none;text-transform:uppercase;letter-spacing:.04em;transition:border-color .2s"
-        oninput="this.value=this.value.toUpperCase()"
-        onkeydown="if(event.key==='Enter')doLookup()"
-        onfocus="this.style.borderColor='var(--gold)'"
-        onblur="this.style.borderColor='var(--border2)'">
-      <button onclick="doLookup()"
-        style="background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg);font-family:var(--fb);font-size:14px;font-weight:700;padding:12px 22px;border-radius:11px;border:none;cursor:pointer;white-space:nowrap;transition:all .2s"
-        onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 18px rgba(245,197,24,.3)'"
-        onmouseout="this.style.transform='';this.style.boxShadow=''">
-        Check →
-      </button>
-    </div>
-    <div id="lookup-result" style="margin-top:12px"></div>
-  </div>
-
   <!-- TRUST BAR -->
   <div class="trust">
     <div>🔐</div>
@@ -1438,58 +1414,6 @@ function processChangeStep(){
       setTimeout(()=>updateChangeDots(''),500);err.textContent="PINs didn't match. Try again.";
     }
   }
-}
-
-// ══════════════════════════════════════════════════════
-// 🔍 TICKET LOOKUP — participants self-serve their numbers
-// ══════════════════════════════════════════════════════
-async function doLookup(){
-  const ref=document.getElementById('lookup-ref').value.trim().toUpperCase();
-  const out=document.getElementById('lookup-result');
-  if(!ref){showLookupResult('error','Please enter your reference code.');return;}
-  if(!ref.startsWith('RF-')){showLookupResult('error','Reference codes start with "RF-". Check your confirmation message.');return;}
-  if(!BRIDGE.sheets.url){showLookupResult('error','Lookup not available yet.');return;}
-  out.innerHTML='<div style="font-size:13px;color:var(--muted);padding:10px 0">⏳ Checking...</div>';
-  try{
-    const url=BRIDGE.sheets.url+'?lookup='+encodeURIComponent(ref);
-    const resp=await fetch(url);
-    const d=await resp.json();
-    if(d.found){
-      if(d.tickets){
-        // Tickets assigned — show them
-        const chips=d.tickets.split(/[,\s]+/).filter(t=>t.trim()).map(t=>`<span style="background:var(--bg4);border:1px solid rgba(245,197,24,.3);border-radius:7px;padding:4px 12px;font-family:var(--fd);font-size:18px;color:var(--gold);letter-spacing:.05em">${t.trim()}</span>`).join('');
-        showLookupResult('success',`
-          <div style="font-size:13px;color:var(--muted2);margin-bottom:10px">Hi <strong style="color:var(--text)">${sanitize(d.name)}</strong> 👋 — your payment is confirmed!</div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px">Your ticket numbers (${d.entries} entr${d.entries>1?'ies':'y'}):</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${chips}</div>
-          <div style="font-size:12px;color:var(--green)">✅ Save these numbers and watch the draw live on this page!</div>
-        `);
-      } else {
-        // Payment pending verification
-        showLookupResult('pending',`
-          <div style="font-size:13px;color:var(--text);margin-bottom:4px">Hi <strong>${sanitize(d.name)}</strong> — we received your submission!</div>
-          <div style="font-size:12px;color:var(--gold);line-height:1.6">⏳ <strong>Payment being verified.</strong> Your ticket numbers will be sent to your email/phone once your GCash payment is confirmed (usually within 1–2 hours).</div>
-        `);
-      }
-    } else {
-      showLookupResult('error',`Reference code <strong>${ref}</strong> not found. Double-check and try again, or contact the organizer.`);
-    }
-  }catch(err){
-    showLookupResult('error','Unable to check right now. Please try again in a moment.');
-    console.warn('Lookup error:',err);
-  }
-}
-
-function showLookupResult(type,html){
-  const cfg={
-    success:{bg:'rgba(0,232,123,.07)',border:'rgba(0,232,123,.25)'},
-    pending:{bg:'rgba(245,197,24,.07)',border:'rgba(245,197,24,.25)'},
-    error:  {bg:'rgba(255,68,68,.07)', border:'rgba(255,68,68,.25)'}
-  }[type]||{bg:'var(--bg4)',border:'var(--border2)'};
-  document.getElementById('lookup-result').innerHTML=`
-    <div style="background:${cfg.bg};border:1px solid ${cfg.border};border-radius:11px;padding:14px 16px;font-size:13px;line-height:1.6">
-      ${html}
-    </div>`;
 }
 
 init();
