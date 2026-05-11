@@ -736,19 +736,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px
 // ══════════════════════════════════════════════════════
 const BRIDGE = {
   gcash: {
-    number: '09XX-XXX-XXXX',   // ← YOUR GCash number e.g. '0917-123-4567'
-    name:   'YOUR NAME',        // ← Your name as it appears in GCash
+    number: '0995-049-8620',   // ← YOUR GCash number e.g. '0917-123-4567'
+    name:   'GL*D R** E.',        // ← Your name as it appears in GCash
   },
   maya: {
-    number: '09XX-XXX-XXXX',   // ← YOUR Maya number
-    name:   'YOUR NAME',
+    number: '0995-049-8620',   // ← YOUR Maya number
+    name:   'GL*D R** E.',
   },
   contact: {
     notify: 'SMS or email',     // ← How you notify: 'SMS', 'email', or 'SMS or email'
   },
   sheets: {
-  url: 'https://script.google.com/macros/s/AKfycbwwReu97Au_may5wKaquLINc-AoWdFDEQERcijss0DGSXy0mA1X9UXy7QCHNBy0kwlHwA/exec',
-},
+    // Google Apps Script Web App URL — see setup guide in README
+    // Leave empty ('') until you have it set up
+    url: 'https://script.google.com/macros/s/AKfycbwwReu97Au_may5wKaquLINc-AoWdFDEQERcijss0DGSXy0mA1X9UXy7QCHNBy0kwlHwA/exec',
+  },
   draw: {
     prize:      20000,
     entryFee:   20,
@@ -1064,41 +1066,49 @@ function confirmPaymentSent(){
   const btn=document.getElementById('bp-sent-btn');
   btn.disabled=true;
   btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .8s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Submitting...';
-  // Submit to Google Sheets
-  submitToSheets().finally(()=>{
+  // Fire sheet submission immediately (no await — image tag is fire-and-forget)
+  submitToSheets();
+  // Short UX delay then advance
+  setTimeout(()=>{
     btn.disabled=false;
     btn.innerHTML='✅ I\'ve Sent the Payment';
     document.getElementById('bp-modal').classList.remove('open');
     showPendingVerification();
-    // Advance entry count (for ring fill — actual ticket assigned manually)
     S.cur=Math.min(S.maxE,S.cur+(S.pending?.qty||1));
     renderUI();
     if(S.cur>=S.maxE)setTimeout(triggerFilled,2000);
-  });
+  },1200);
 }
 
-async function submitToSheets(){
-  if(!BRIDGE.sheets.url){
-    console.warn('RaffleForge: Google Sheets URL not configured. Submission skipped.');
-    return;
-  }
+function submitToSheets(){
+  if(!BRIDGE.sheets.url) return;
   const p=S.lastParticipant;
-  const payload=JSON.stringify({
-    timestamp: new Date().toISOString(),
-    ref:       S.currentRef,
-    name:      p.name,
+  const data=JSON.stringify({
+    timestamp:   new Date().toISOString(),
+    ref:         S.currentRef,
+    name:        p.name,
     payoutPhone: '+63'+p.phone,
     payoutType:  p.payType.toUpperCase(),
     contactInfo: p.email,
-    entries:   p.qty,
-    amount:    '₱'+p.price,
-    payMethod: S.bpMethod.toUpperCase(),
-    status:    'PENDING VERIFICATION'
+    entries:     p.qty,
+    amount:      '₱'+p.price,
+    payMethod:   S.bpMethod.toUpperCase(),
+    status:      'PENDING VERIFICATION'
   });
+  // ── IMAGE TAG METHOD ───────────────────────────────────────────────────
+  // WHY: fetch() with no-cors POST fails silently on Apps Script because
+  // Google redirects the request and no-cors cannot follow redirects.
+  // An <img> src GET request bypasses ALL CORS restrictions, follows
+  // redirects automatically, and requires zero special headers.
+  // Apps Script reads the data from e.parameter.data in doGet().
+  // ──────────────────────────────────────────────────────────────────────
   try{
-    await fetch(BRIDGE.sheets.url,{method:'POST',mode:'no-cors',body:payload,
-      headers:{'Content-Type':'application/json'}});
-  }catch(e){console.warn('Sheets submission error:',e);}
+    const img=new Image();
+    img.src=BRIDGE.sheets.url
+      +'?data='+encodeURIComponent(data)
+      +'&t='+Date.now(); // cache-bust
+    img.onerror=()=>{}; // silence expected error (response isn't an image)
+  }catch(e){ console.warn('Sheet error:',e); }
 }
 
 function showPendingVerification(){
