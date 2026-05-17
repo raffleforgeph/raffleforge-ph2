@@ -1248,10 +1248,9 @@ function submitSheets(){
   var p=S.lastP,d=DC[p.drawId];
   var payload=JSON.stringify({timestamp:new Date().toISOString(),ref:S.currentRef,name:p.name,payoutPhone:d.isPhys?'N/A':'+63'+p.phone,payoutType:d.isPhys?'PHYSICAL':p.payType.toUpperCase(),contactInfo:p.email,entries:p.qty,amount:'\u20b1'+p.price,payMethod:S.bpMethod.toUpperCase(),drawTier:d.label,status:'PENDING VERIFICATION'});
   var url=BRIDGE.sheets.url+'?data='+encodeURIComponent(payload)+'&t='+Date.now();
-  // Method 1: fetch with no-cors (most reliable on mobile)
-  try{fetch(url,{mode:'no-cors',cache:'no-store'}).catch(function(){});}catch(e){}
-  // Method 2: Image tag backup (reliable on desktop)
-  try{var img=new Image();img.src=url;window._rfImg=img;}catch(e){}
+  try{fetch(url,{mode:'no-cors',cache:'no-store'}).catch(function(){
+    var img=new Image();img.src=url;window._rfImg=img;
+  });}catch(e){var img=new Image();img.src=url;window._rfImg=img;}
 }
 async function loadCount(id){
   if(!BRIDGE.sheets.url)return;
