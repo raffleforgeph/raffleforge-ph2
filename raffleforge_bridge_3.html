@@ -1052,6 +1052,12 @@ function updateDP(id){
   }
   // Sync home page cards
   renderHome();
+  // Load live counts for all tiers on startup
+  if(BRIDGE.sheets.url){
+    setTimeout(loadAllCounts,500);
+    // Auto-refresh every 30 seconds
+    setInterval(loadAllCounts,30000);
+  }
 }
 
 function updateTotal(id){
@@ -1224,6 +1230,8 @@ function confirmSent(){
     DS[drawId].cur=Math.min(DC[drawId].maxE,DS[drawId].cur+qty);
     // Clear bundle cart and stepper after successful purchase
     DS[drawId].bundleCart=[];
+    // Refresh all counts from sheet
+    if(BRIDGE.sheets.url)setTimeout(loadAllCounts,2000);
     DS[drawId].extraE=0;
     renderBundles(drawId);
     updateTotal(drawId);
@@ -1247,7 +1255,14 @@ function submitSheets(){
 }
 async function loadCount(id){
   if(!BRIDGE.sheets.url)return;
-  try{const r=await fetch(BRIDGE.sheets.url+'?count=1&draw='+id+'&verified=1&t='+Date.now());const d=await r.json();if(d&&typeof d.count==='number'&&d.count>0){DS[id].cur=Math.min(d.count,DC[id].maxE);DS[id].poolIdx=DS[id].cur;updateDP(id);}}catch(e){}
+  try{fetch(BRIDGE.sheets.url+'?count=1&draw='+id+'&verified=1&t='+Date.now(),{mode:'cors'})
+    .then(function(r){return r.json();})
+    .then(function(d){if(d&&typeof d.count==='number'){DS[id].cur=Math.min(d.count,DC[id].maxE);DS[id].poolIdx=DS[id].cur;if(S.activeDraw===id)updateDP(id);renderHome();}})
+    .catch(function(){});}catch(e){}
+}
+
+function loadAllCounts(){
+  ['main','major','minor'].forEach(function(id){loadCount(id);});
 }
 
 // DRAW PHASES
