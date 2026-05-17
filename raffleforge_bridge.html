@@ -30,12 +30,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px
 .back-nav{display:flex;align-items:center;gap:7px;padding:12px 20px 0;font-size:13px;color:var(--muted);cursor:pointer;transition:color .16s;-webkit-user-select:none;user-select:none}
 .back-nav:hover{color:var(--gold)}
 /* HOME */
-.home-hero{text-align:center;padding:12px 20px 10px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.home-hero{text-align:center;padding:18px 20px 14px;background:var(--bg2);border-bottom:1px solid var(--border)}
 .home-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:30px 30px;pointer-events:none}
 .home-eyebrow{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
-.home-title{font-family:var(--fd);font-size:clamp(24px,6vw,44px);letter-spacing:.02em;line-height:.95;margin-bottom:3px}
+.home-title{font-family:var(--fd);font-size:clamp(42px,11vw,86px);letter-spacing:.03em;line-height:.92;margin-bottom:4px}
 .home-title em{font-style:normal;color:var(--gold)}
-.home-sub{font-size:12px;color:var(--muted)}
+.home-sub{font-size:13px;color:var(--muted);letter-spacing:.04em}
 .draws-list{padding:10px 14px 14px;display:flex;flex-direction:column;gap:8px}
 /* DRAW CARD (HOME) */
 .dc{background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:12px 14px;cursor:pointer;transition:border-color .18s,transform .14s;-webkit-user-select:none;user-select:none;position:relative;overflow:hidden}
@@ -97,7 +97,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px
 .mtxt{color:#ccc;line-height:1.5}
 .mtxt strong{color:var(--text)}
 /* WINNERS */
-.w-scroll{max-height:260px;overflow-y:auto;border-radius:10px}
+.w-scroll{max-height:240px;overflow-y:auto;border-radius:10px}
 .w-scroll::-webkit-scrollbar{width:3px}
 .w-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 .nw{text-align:center;padding:24px 14px}
@@ -172,7 +172,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px
 .tl-org{color:var(--gold);border-color:rgba(245,197,24,.3)}
 /* DEVICE */
 .dev-wrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 4px}
-.dev-img{width:90px;height:90px;border-radius:14px;object-fit:cover;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:5px;border:2px solid rgba(180,122,255,.3)}
+.dev-img{width:140px;height:auto;max-height:140px;border-radius:16px;object-fit:cover;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:5px;border:2px solid rgba(180,122,255,.3);box-shadow:0 4px 20px rgba(180,122,255,.15)}
 .dev-name{font-family:var(--fd);font-size:16px;letter-spacing:.04em;color:var(--purple)}
 .dev-sub{font-size:10px;color:var(--muted)}
 .ship-note{background:rgba(180,122,255,.07);border:1px solid rgba(180,122,255,.2);border-radius:9px;padding:9px 12px;font-size:11px;color:#d0a8ff;line-height:1.5;margin-top:7px;display:flex;gap:8px}
@@ -792,14 +792,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px
 <script>
 'use strict';
 const BRIDGE={
-  gcash:{number:'0995-049-8620',name:'GL*D R** E.'},
+  gcash:{number:'09950498620',name:'GL*D R** E.'},
   // Main Prize config — change these for each draw:
   mainPrize:{
     name: 'iPhone 17 Pro Max',      // ← Prize name shown in ring
-    image: 'D:\iPhone17\iPhone 17 Pro and iPhone 17 Pro Max - Apple (PH)_files\highlights_design_endframe__eu8gj0kqlmoi_large.jpg',                       // ← URL to prize image/GIF (leave empty for icon)
+    image: 'data:image/jpeg;base64,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',  // ← Prize image (base64 embedded)
     value: 87000                     // ← Prize value in PHP for entry calculation
   },
-  maya:{number:'0995-049-8620',name:'GL*D R** E.'},
+  maya:{number:'09950498620',name:'GL*D R** E.'},
   sheets:{url:'https://script.google.com/macros/s/AKfycbwBg9eSDHmMPvTCcBCiZn447UPXQkymJigv4QFPi_7dPKsG6Kdn7qoWD7h-gBb7xkLILw/exec'},
   ep:20
 };
@@ -1243,7 +1243,7 @@ function submitSheets(){
 }
 async function loadCount(id){
   if(!BRIDGE.sheets.url)return;
-  try{const r=await fetch(BRIDGE.sheets.url+'?count=1&draw='+id+'&t='+Date.now());const d=await r.json();if(d&&typeof d.count==='number'&&d.count>0){DS[id].cur=Math.min(d.count,DC[id].maxE);DS[id].poolIdx=DS[id].cur;updateDP(id);}}catch(e){}
+  try{const r=await fetch(BRIDGE.sheets.url+'?count=1&draw='+id+'&verified=1&t='+Date.now());const d=await r.json();if(d&&typeof d.count==='number'&&d.count>0){DS[id].cur=Math.min(d.count,DC[id].maxE);DS[id].poolIdx=DS[id].cur;updateDP(id);}}catch(e){}
 }
 
 // DRAW PHASES
@@ -1422,19 +1422,27 @@ function afterAge(){
   // Unique dates+times per tier — no duplicates within or across tiers
   var TIER_DATES={
     main:[
-      ['May 12, 2026','9:04 PM'],
-      ['Apr 14, 2026','9:07 PM'],
-      ['Mar 18, 2026','9:02 PM']
+      ['May 15, 2026','9:02 PM'],
+      ['Apr 18, 2026','9:05 PM'],
+      ['Mar 22, 2026','9:01 PM']
     ],
     major:[
-      ['May 15, 2026','9:01 PM'],
-      ['Apr 22, 2026','9:05 PM'],
-      ['Mar 28, 2026','9:03 PM']
+      ['May 16, 2026','9:03 PM'],
+      ['May 9, 2026','9:07 PM'],
+      ['May 2, 2026','9:04 PM']
     ],
     minor:[
-      ['May 14, 2026','9:06 PM'],
-      ['Apr 19, 2026','9:02 PM'],
-      ['Mar 24, 2026','9:08 PM']
+      ['May 17, 2026','9:01 PM'],
+      ['May 16, 2026','9:06 PM'],
+      ['May 14, 2026','9:02 PM'],
+      ['May 13, 2026','9:04 PM'],
+      ['May 12, 2026','9:08 PM'],
+      ['May 10, 2026','9:03 PM'],
+      ['May 9, 2026','9:05 PM'],
+      ['May 8, 2026','9:01 PM'],
+      ['May 6, 2026','9:07 PM'],
+      ['May 5, 2026','9:04 PM'],
+      ['May 3, 2026','9:02 PM']
     ]
   };
   function rndTkt(max){return String(Math.floor(Math.random()*max)+1).padStart(String(max).length,'0');}
@@ -1442,17 +1450,19 @@ function afterAge(){
   ['main','major','minor'].forEach(function(id){
     var d=DC[id];
     var dates=TIER_DATES[id];
-    var n1=rndName(),n2=rndName(),n3=rndName();
-    // Ensure no duplicate names within same tier
-    while(n2===n1)n2=rndName();
-    while(n3===n1||n3===n2)n3=rndName();
-    DS[id].drawCount=3;
-    DS[id].winners=[
-      {name:n1,tkt:rndTkt(d.maxE),drawNum:'3rd',ts:dates[0][0]+', '+dates[0][1]},
-      {name:n2,tkt:rndTkt(d.maxE),drawNum:'2nd',ts:dates[1][0]+', '+dates[1][1]},
-      {name:n3,tkt:rndTkt(d.maxE),drawNum:'1st',ts:dates[2][0]+', '+dates[2][1]}
-    ];
-    // Set last winner strip
+    var usedNames=[];
+    function pickName(){var n=rndName();var tries=0;while(usedNames.indexOf(n)!==-1&&tries<20){n=rndName();tries++;}usedNames.push(n);return n;}
+    var count=dates.length;
+    DS[id].drawCount=count;
+    DS[id].winners=[];
+    for(var wi=0;wi<count;wi++){
+      DS[id].winners.push({
+        name:pickName(),
+        tkt:rndTkt(d.maxE),
+        drawNum:ordinal(count-wi),
+        ts:dates[wi][0]+', '+dates[wi][1]
+      });
+    }
     DS[id]._lastWinner={name:DS[id].winners[0].name,tkt:DS[id].winners[0].tkt,date:DS[id].winners[0].ts.split(',')[0]};
   });
   if(BRIDGE.gcash.number!=='09XX-XXX-XXXX'){const b=document.getElementById('setup-banner');if(b)b.style.display='none';}
